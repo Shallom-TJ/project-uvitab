@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notes &amp; Resources — VU Notes (Certificate Program)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,600&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   VU NOTES — Premium Dark Aesthetic Design Tokens
+   Designed for Victoria University Uganda Certificate Students
+   ========================================================= */
+
+:root{
+  --vu-red: #E63946;
+  --vu-red-dark: #C81E2C;
+  --vu-red-glow: rgba(230, 57, 70, 0.35);
+  --vu-blue: #4E8FD1;
+  --vu-blue-dark: #2C5680;
+  --vu-blue-glow: rgba(78, 143, 209, 0.35);
+  --vu-silver: #94A3B8;
+  --vu-silver-light: rgba(255, 255, 255, 0.12);
+  --vu-ink: #F8FAFC;
+  --vu-ink-soft: #CBD5E1;
+  --vu-paper: #090A0F;
+  --vu-paper-raised: rgba(18, 22, 32, 0.78);
+
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.12);
+  --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(230, 57, 70, 0.25);
+
+  --container: 1140px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+  margin: 0;
+  background-color: #090a0f;
+  background-image: 
+    linear-gradient(180deg, 
+      rgba(9, 10, 15, 0.94) 0%, 
+      rgba(12, 15, 22, 0.76) 20%, 
+      rgba(14, 18, 28, 0.65) 50%, 
+      rgba(12, 15, 22, 0.76) 80%, 
+      rgba(9, 10, 15, 0.95) 100%
+    ),
+    url('images/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--vu-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+img{ max-width:100%; display:block; }
+
+a{ color: #60a5fa; text-decoration: none; }
+a:hover{ text-decoration: underline; }
+
+h1,h2,h3,h4{
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 .5em;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
+
+.container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #ff7b88;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+.eyebrow::before{
+  content:"";
+  width: 18px; height: 4px;
+  background: var(--vu-red);
+  display:inline-block;
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--vu-red-glow);
+}
+
+/* Quadrant mark */
+.quad-mark{
+  --s: 20px;
+  width: var(--s); height: var(--s);
+  display:inline-grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink:0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+}
+.quad-mark span:nth-child(1){ background: var(--vu-red); }
+.quad-mark span:nth-child(2){ background: var(--vu-blue); }
+.quad-mark span:nth-child(3){ background: var(--vu-blue); }
+.quad-mark span:nth-child(4){ background: var(--vu-red); }
+
+/* Setup banner */
+.setup-banner{
+  background: rgba(18, 22, 32, 0.95);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  color: #f1f5f9;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+.setup-banner code{
+  background: rgba(255,255,255,0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: #7dd3fc;
+}
+
+/* Header & Navigation */
+.site-header{
+  position: sticky; top:0; z-index: 50;
+  background: rgba(9, 10, 15, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.nav{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 0;
+}
+.brand{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; color: #ffffff;
+}
+.brand-word{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+.brand-word b{ color: var(--vu-red); font-style:italic; }
+
+.nav-links{
+  display:flex; align-items:center; gap: 6px;
+  list-style:none; margin:0; padding:0;
+}
+.nav-links a{
+  text-decoration:none;
+  color: var(--vu-ink-soft);
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-s);
+  transition: all .2s ease;
+}
+.nav-links a:hover{ background: rgba(255,255,255,0.08); color: #ffffff; text-decoration: none; }
+.nav-links a.active{ color: #ffffff; background: rgba(200, 30, 44, 0.3); border: 1px solid rgba(200, 30, 44, 0.5); }
+
+.nav-cta{
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color:#fff !important;
+  background: var(--vu-red) !important;
+  box-shadow: 0 4px 14px var(--vu-red-glow) !important;
+}
+.nav-cta:hover{ background: #d32f2f !important; transform: translateY(-1px); }
+
+.nav-toggle{ display:none; color: #ffffff; }
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14.5px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration:none;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{ background: var(--vu-red); color:#fff; box-shadow: 0 4px 16px var(--vu-red-glow); }
+.btn-primary:hover{ background: #d32f2f; box-shadow: var(--shadow-lift); transform: translateY(-2px); text-decoration: none; }
+
+.btn-secondary{ background: rgba(255,255,255,0.12); color:#fff; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px); }
+.btn-secondary:hover{ background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); transform: translateY(-2px); text-decoration: none; }
+
+.btn-danger{ background: rgba(200, 30, 44, 0.2); color: #ff7b88; border: 1px solid rgba(200, 30, 44, 0.4); }
+.btn-danger:hover{ background: var(--vu-red); color: #fff; border-color: var(--vu-red); text-decoration: none; }
+
+.btn-outline{ background: rgba(255, 255, 255, 0.05); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px); }
+.btn-outline:hover{ background: var(--vu-red); color:#fff; border-color: var(--vu-red); box-shadow: 0 4px 16px var(--vu-red-glow); transform: translateY(-2px); text-decoration: none; }
+
+.btn-ghost{ background: transparent; color: #7dd3fc; padding: 8px 4px; }
+.btn-ghost:hover{ color: #ffffff; text-decoration: underline; }
+
+.btn-block{ width:100%; }
+.btn-small{ padding: 8px 18px; font-size: 13.5px; }
+
+/* Page Head */
+.page-head{
+  padding: 56px 0 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(9, 10, 15, 0.4);
+  backdrop-filter: blur(8px);
+}
+.page-head h1{
+  font-size: clamp(32px, 4.5vw, 48px);
+  text-shadow: 0 2px 14px rgba(0,0,0,0.7);
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+.page-head p{
+  font-size: 17px;
+  max-width: 62ch;
+  color: #cbd5e1;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+}
+
+/* Section */
+.section{ padding: 48px 0; }
+
+/* Notes Layout */
+.notes-layout{
+  display:grid;
+  grid-template-columns: 280px 1fr;
+  gap: 36px;
+  align-items:start;
+}
+
+/* Sidebar Course List (Fully Scrollable Container) */
+.course-list{
+  background: rgba(18, 22, 32, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-m);
+  padding: 12px;
+  position: sticky; top: 90px;
+  box-shadow: var(--shadow-card);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+.course-list-items{ display: flex; flex-direction: column; gap: 4px; }
+.course-list button{
+  width:100%; text-align:left;
+  background:none; border:none;
+  padding: 11px 14px;
+  border-radius: var(--radius-s);
+  font-size: 13.5px; font-weight:600;
+  color: var(--vu-ink-soft);
+  cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center;
+  transition: all 0.18s ease;
+}
+.course-list button:hover{ background: rgba(255, 255, 255, 0.07); color: #ffffff; }
+.course-list button.active{
+  background: rgba(200, 30, 44, 0.25);
+  color: #ffffff;
+  border-left: 3px solid var(--vu-red);
+  font-weight: 700;
+}
+.course-list button .count{
+  font-family: var(--font-mono); font-size: 11px; color: var(--vu-silver);
+  background: rgba(255, 255, 255, 0.08); padding: 2px 7px; border-radius: 999px;
+  flex-shrink: 0; margin-left: 6px;
+}
+.course-list button.active .count{ color: #ffffff; background: var(--vu-red); }
+
+.add-course{
+  display:flex; gap:6px; padding: 12px 6px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 8px;
+}
+.add-course input{
+  flex:1; font-size:13px; padding:9px 12px;
+  border-radius: var(--radius-s);
+  border:1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.add-course input:focus{ border-color: var(--vu-blue); box-shadow: 0 0 8px rgba(78, 143, 209, 0.3); }
+.add-course button{
+  width:auto; background: var(--vu-red); color:#fff; padding: 8px 14px;
+  border-radius: var(--radius-s); font-size: 13px; font-weight: 700;
+  border: none; cursor: pointer; transition: background 0.2s ease;
+}
+.add-course button:hover{ background: #d32f2f; }
+
+/* Category Tabs */
+.category-tabs{
+  display:flex; gap:10px; margin-bottom: 24px; flex-wrap:wrap;
+}
+.category-tabs button{
+  background: rgba(18, 22, 32, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 18px; border-radius: 999px;
+  font-size: 13.5px; font-weight:700; cursor:pointer;
+  color: var(--vu-ink-soft);
+  transition: all 0.2s ease;
+}
+.category-tabs button:hover{ background: rgba(255, 255, 255, 0.12); color: #ffffff; border-color: rgba(255, 255, 255, 0.25); }
+.category-tabs button.active{
+  background: var(--vu-red); color:#fff; border-color: var(--vu-red);
+  box-shadow: 0 4px 16px var(--vu-red-glow);
+}
+
+/* Resource Toolbar */
+.resource-toolbar{
+  display:flex; justify-space-between; align-items:center;
+  margin-bottom: 20px; gap: 14px; flex-wrap:wrap;
+}
+.resource-toolbar select, .resource-toolbar input[type="search"]{
+  padding: 11px 16px; border-radius: var(--radius-s);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(18, 22, 32, 0.85);
+  backdrop-filter: blur(12px);
+  color: #ffffff; font-size:14px;
+  outline: none; transition: border-color 0.2s ease;
+}
+.resource-toolbar select option{ background: #121620; color: #fff; }
+.resource-toolbar input[type="search"]{ flex:1; min-width: 220px; }
+.resource-toolbar select:focus, .resource-toolbar input[type="search"]:focus{ border-color: var(--vu-blue); box-shadow: 0 0 10px rgba(78, 143, 209, 0.3); }
+
+/* Resource List & Glass Cards */
+.resource-list{ display:flex; flex-direction:column; gap: 14px; }
+.resource-item{
+  background: rgba(18, 22, 32, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-m);
+  padding: 20px 22px;
+  display:flex; align-items:center; gap: 20px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.resource-item:hover{
+  transform: translateY(-3px);
+  background: rgba(26, 32, 46, 0.88);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.2);
+}
+.resource-item .file-icon{
+  width:46px; height:46px; border-radius: 12px;
+  background: rgba(200, 30, 44, 0.15);
+  border: 1px solid rgba(200, 30, 44, 0.3);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.resource-item .file-icon svg{ width:22px; height:22px; color: #ff7b88; }
+.resource-info{ flex:1; min-width:0; }
+.resource-info h4{ font-family: var(--font-body); font-weight:700; font-size: 16px; margin:0 0 5px; color: #ffffff; }
+.resource-info .meta{ font-size: 13px; color: var(--vu-ink-soft); display:flex; gap:12px; flex-wrap:wrap; align-items: center; }
+.resource-tag{
+  font-family: var(--font-mono); font-size: 11px; text-transform:uppercase; letter-spacing: 0.04em;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(78, 143, 209, 0.2); color: #7dd3fc; border: 1px solid rgba(78, 143, 209, 0.35);
+}
+.resource-actions{ display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.empty-state{
+  text-align:center; padding: 64px 24px; color: var(--vu-silver);
+  background: rgba(18, 22, 32, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1.5px dashed rgba(255, 255, 255, 0.18); border-radius: var(--radius-m);
+}
+.empty-state h3{ color: #ffffff; font-size: 18px; margin-bottom: 8px; }
+
+/* Modal & Form Controls */
+.modal-overlay{
+  position: fixed; inset:0;
+  background: rgba(5, 7, 10, 0.75);
+  backdrop-filter: blur(8px);
+  display:none; align-items:center; justify-content:center;
+  padding: 20px; z-index: 100;
+}
+.modal-overlay.open{ display:flex; }
+.modal{
+  background: rgba(18, 22, 32, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-l);
+  max-width: 500px; width:100%;
+  padding: 34px;
+  max-height: 90vh; overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+  position: relative;
+  color: #ffffff;
+}
+.modal-close{
+  position:absolute; top:18px; right:18px;
+  background: rgba(255,255,255,0.1); border:none;
+  width:34px; height:34px; border-radius:50%;
+  cursor:pointer; font-size: 16px; color: #ffffff;
+  display:flex; align-items:center; justify-content:center;
+  transition: background 0.2s ease;
+}
+.modal-close:hover{ background: var(--vu-red); }
+.modal h2{ font-size: 24px; margin-bottom: 6px; color: #ffffff; }
+.modal .modal-sub{ font-size: 14.5px; color: var(--vu-ink-soft); margin-bottom: 24px; }
+
+.field{ margin-bottom: 18px; }
+.field label{
+  display:block; font-size: 13.5px; font-weight:700; margin-bottom: 8px; color: #f1f5f9;
+}
+.field input, .field select, .field textarea{
+  width:100%;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  padding: 12px 14px;
+  border-radius: var(--radius-s);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(9, 10, 15, 0.7);
+  color: #ffffff;
+  max-height: 250px;
+}
+.field input:focus, .field select:focus, .field textarea:focus, .field input[type=file]:focus{
+  outline: none;
+  border-color: var(--vu-blue);
+  box-shadow: 0 0 10px rgba(78, 143, 209, 0.4);
+}
+.field select option{ background: #121620; color: #fff; padding: 6px 10px; }
+.field textarea{ resize: vertical; min-height: 90px; }
+.field-row{ display:flex; gap:14px; }
+.field-row .field{ flex:1; }
+.form-note{ font-size: 12.5px; color: var(--vu-silver); margin-top: 6px; line-height: 1.4; }
+
+/* Toast */
+.toast{
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(18, 22, 32, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color:#fff;
+  padding: 14px 24px; border-radius: 999px;
+  font-size: 14px; font-weight:600;
+  display:flex; align-items:center; gap:12px;
+  opacity:0; pointer-events:none;
+  transition: opacity .25s ease, transform .25s ease;
+  z-index: 200;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); pointer-events:auto; }
+.toast .dot{ width:9px; height:9px; border-radius:50%; background: var(--vu-red); box-shadow: 0 0 8px var(--vu-red-glow); }
+
+/* Footer */
+.site-footer{
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 44px 0 30px;
+  margin-top: 60px;
+  background: rgba(9, 10, 15, 0.6);
+  backdrop-filter: blur(10px);
+}
+.footer-bottom{
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap: 12px;
+  font-size: 13.5px; color: var(--vu-silver);
+}
+
+/* AI Content Monitor Status Indicators */
+.ai-check-panel{
+  margin: 18px 0;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.ai-check-header{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(78, 143, 209, 0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #7dd3fc;
+  letter-spacing: 0.03em;
+}
+.ai-check-header .ai-icon{ font-size: 16px; }
+.ai-check-body{ padding: 14px 16px; font-size: 13.5px; line-height: 1.5; }
+
+.ai-status-idle{ display: none; }
+.ai-status-loading{ display: none; }
+.ai-status-loading.visible, .ai-status-idle.visible{ display: block; }
+
+.ai-scanning{
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  font-size: 13.5px; color: #7dd3fc;
+}
+.ai-spinner{
+  width: 18px; height: 18px;
+  border: 2px solid rgba(78,143,209,0.3);
+  border-top-color: var(--vu-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+.ai-result{
+  border-radius: var(--radius-m);
+  padding: 14px 16px;
+  display: none;
+}
+.ai-result.visible{ display: block; }
+
+.ai-result-approved{
+  background: rgba(22, 163, 74, 0.15);
+  border: 1px solid rgba(22, 163, 74, 0.4);
+}
+.ai-result-mismatch{
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+.ai-result-rejected{
+  background: rgba(200, 30, 44, 0.15);
+  border: 1px solid rgba(200, 30, 44, 0.4);
+}
+.ai-result-error{
+  background: rgba(100,100,100,0.15);
+  border: 1px solid rgba(200,200,200,0.3);
+}
+
+.ai-result-header{
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 8px;
+}
+.ai-result-icon{ font-size: 20px; flex-shrink: 0; line-height: 1.3; }
+.ai-result-title{ font-weight: 700; font-size: 14.5px; color: #fff; line-height: 1.3; }
+.ai-result-message{ font-size: 13px; color: #cbd5e1; margin-bottom: 10px; }
+.ai-result-details{ font-size: 12px; color: var(--vu-silver); }
+
+.ai-confidence{
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 10px;
+}
+.ai-confidence-label{ font-size: 11.5px; color: var(--vu-silver); min-width: 80px; }
+.ai-confidence-bar{
+  flex: 1; height: 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.12);
+  overflow: hidden;
+}
+.ai-confidence-fill{
+  height: 100%; border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.ai-confidence-fill.approved{ background: #22c55e; }
+.ai-confidence-fill.mismatch{ background: #eab308; }
+.ai-confidence-fill.rejected{ background: #ef4444; }
+.ai-confidence-pct{ font-size: 11.5px; font-family: var(--font-mono); color: var(--vu-silver); min-width: 34px; text-align: right; }
+
+.ai-mismatch-actions{ display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+.ai-notice{
+  font-size: 11.5px; color: var(--vu-silver);
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-s);
+  border: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.ai-notice strong{ color: #94a3b8; }
+
+.upload-step-indicator{
+  display: flex; align-items: center; gap: 0;
+  margin-bottom: 22px;
+}
+.upload-step{
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--vu-silver);
+}
+.upload-step.active{ color: #fff; }
+.upload-step.done{ color: #22c55e; }
+.upload-step-num{
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content:center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.upload-step.active .upload-step-num{ background: var(--vu-blue); color: #fff; }
+.upload-step.done .upload-step-num{ background: #22c55e; color: #fff; }
+.upload-step-sep{ flex: 1; height: 1px; background: rgba(255,255,255,0.12); margin: 0 6px; }
+
+@media (max-width: 900px){
+  .notes-layout{ grid-template-columns: 1fr; }
+  .course-list{
+    position:static;
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    margin-bottom: 20px;
+  }
+}
+@media (max-width: 640px){
+  .nav-links{
+    position: fixed; top: 62px; left:0; right:0;
+    background: rgba(9, 10, 15, 0.96);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex-direction: column; align-items:stretch; padding: 20px 24px 28px;
+    gap: 12px;
+    display:none;
+    z-index: 999;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.85);
+  }
+  .nav-links.open{ display:flex; }
+  .nav-links a{
+    padding: 14px 20px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font-size: 16px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+  }
+  .nav-toggle{
+    display:block; background:none; border:none; cursor:pointer;
+    width: 44px; height:44px; padding: 8px; color: #ffffff;
+  }
+  .field-row{ flex-direction:column; gap:0; }
+  .resource-item{ flex-direction: column; align-items: flex-start; }
+  .resource-item .btn{ width: 100%; margin-top: 8px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav container">
+    <a href="index.html" class="brand">
+      <span class="quad-mark"><span></span><span></span><span></span><span></span></span>
+      <span class="brand-word">VU <b>Notes</b></span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="notes.html" class="active">Notes &amp; Resources</a></li>
+      <li><a href="tutors.html">Book a Tutor</a></li>
+      <li><a href="admin.html">Admin Dashboard</a></li>
+      <li><a href="#upload" class="nav-cta">Upload Notes</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="page-head">
+  <div class="container">
+    <p class="eyebrow">Shared Academic Drive — Victoria University Uganda</p>
+    <h1>Your Knowledge, All in One Place</h1>
+    <p>Select a course folder on the left or use the course dropdown below, then pick a category. Browse lecture notes, past papers, summaries, and self-test questions shared across Victoria University students.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:40px;">
+  <div class="container notes-layout">
+
+    <!-- Course folders sidebar (Fully Scrollable) -->
+    <aside class="course-list" id="courseListContainer">
+      <div id="courseList" class="course-list-items"></div>
+      <div class="add-course">
+        <input type="text" id="newCourseInput" placeholder="New course name…">
+        <button id="addCourseBtn">Add</button>
+      </div>
+    </aside>
+
+    <!-- Main resource area -->
+    <div>
+      <div class="category-tabs" id="categoryTabs">
+        <button data-cat="lectures" class="active">Missed Lecture Notes</button>
+        <button data-cat="papers">Past Papers</button>
+        <button data-cat="summaries">Summarized Notes</button>
+        <button data-cat="selftest">Self-Test Questions</button>
+      </div>
+
+      <div class="resource-toolbar">
+        <!-- Scrollable Dropdown Selector for Course Selection -->
+        <select id="courseDropdownSelect" aria-label="Select Course Folder">
+          <option value="All">All Course Folders</option>
+        </select>
+        
+        <input type="search" id="resourceSearch" placeholder="Search this folder…">
+        <button class="btn btn-primary btn-small" id="uploadTrigger">＋ Upload to this folder</button>
+      </div>
+
+      <div class="resource-list" id="resourceList"></div>
+      <div class="empty-state" id="resourceEmpty" style="display:none;">
+        <h3>This folder is empty so far</h3>
+        <p id="emptyMsgText">Be the first to upload something here.</p>
+        <button class="btn btn-secondary btn-small" id="clearSearchBtn" style="display:none; margin-top:10px;">Clear Search</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Upload modal (with AI Academic Content Monitor) -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal" id="upload">
+    <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+    <h2>Upload Academic Resource</h2>
+    <p class="modal-sub" id="uploadContext"></p>
+
+    <!-- Step indicator -->
+    <div class="upload-step-indicator">
+      <div class="upload-step done" id="stepIndicator1">
+        <div class="upload-step-num">1</div>
+        <span>Select File</span>
+      </div>
+      <div class="upload-step-sep"></div>
+      <div class="upload-step" id="stepIndicator2">
+        <div class="upload-step-num">2</div>
+        <span>AI Content Check</span>
+      </div>
+      <div class="upload-step-sep"></div>
+      <div class="upload-step" id="stepIndicator3">
+        <div class="upload-step-num">3</div>
+        <span>Upload</span>
+      </div>
+    </div>
+
+    <form id="uploadForm">
+      <div class="field-row">
+        <div class="field">
+          <label for="upFaculty">Faculty</label>
+          <select id="upFaculty" required>
+            <option value="">Select Faculty...</option>
+            <option value="Faculty of Science and Technology">Faculty of Science and Technology</option>
+            <option value="Faculty of Business and Management">Faculty of Business and Management</option>
+            <option value="Faculty of Humanities and Social Sciences">Faculty of Humanities and Social Sciences</option>
+            <option value="School of Law">School of Law</option>
+            <option value="Faculty of Health Sciences">Faculty of Health Sciences</option>
+            <option value="Institute of Education and Life-Long Learning">Institute of Education and Life-Long Learning</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="upCourse">Course</label>
+          <select id="upCourse" required disabled>
+            <option value="">Select a faculty first</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="upCategory">Resource Category</label>
+        <select id="upCategory" required>
+          <option value="lectures">Missed Lecture Notes</option>
+          <option value="papers">Past Papers</option>
+          <option value="summaries">Summarized Notes</option>
+          <option value="selftest">Self-Test Questions</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="upTitle">Resource Title</label>
+        <input type="text" id="upTitle" required placeholder="e.g. Module 2 Lecture — Software Architecture">
+      </div>
+      <div class="field">
+        <label for="upUploader">Your Name</label>
+        <input type="text" id="upUploader" required placeholder="e.g. Grace Namutebi">
+      </div>
+      <div class="field">
+        <label for="upFile">Select File</label>
+        <input type="file" id="upFile" required accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.csv,.xls,.xlsx,.md">
+        <p class="form-note">Accepted: PDF, DOCX, PPTX, TXT, XLS, XLSX. Max 50 MB.</p>
+      </div>
+
+      <!-- AI Content Monitor Panel -->
+      <div class="ai-check-panel" id="aiCheckPanel" style="display:none;">
+        <div class="ai-check-header">
+          <span class="ai-icon">🤖</span>
+          <span>AI Academic Content Monitor</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:400;opacity:0.7;">UVTAB Curriculum Validator</span>
+        </div>
+        <!-- Scanning state -->
+        <div class="ai-scanning" id="aiScanning">
+          <div class="ai-spinner"></div>
+          <span>Analysing academic relevance and course compatibility…</span>
+        </div>
+        <!-- Result -->
+        <div class="ai-result" id="aiResult">
+          <div class="ai-result-header">
+            <span class="ai-result-icon" id="aiResultIcon"></span>
+            <div>
+              <div class="ai-result-title" id="aiResultTitle"></div>
+              <div class="ai-result-message" id="aiResultMsg"></div>
+            </div>
+          </div>
+          <div class="ai-result-details" id="aiResultDetails"></div>
+          <div class="ai-confidence">
+            <span class="ai-confidence-label">Confidence</span>
+            <div class="ai-confidence-bar"><div class="ai-confidence-fill" id="aiConfFill" style="width:0%"></div></div>
+            <span class="ai-confidence-pct" id="aiConfPct">0%</span>
+          </div>
+          <!-- Mismatch actions -->
+          <div class="ai-mismatch-actions" id="aiMismatchActions" style="display:none;">
+            <button type="button" class="btn btn-secondary btn-small" id="aiChangeCourse">↩ Change Course</button>
+            <button type="button" class="btn btn-danger btn-small" onclick="closeModal('uploadModal')">✕ Cancel Upload</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-notice">
+        <strong>📋 Academic Content Policy:</strong> Your file will be checked for academic relevance and UVTAB course compatibility before being published to the shared folder. Only educational resources are accepted.
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn" disabled>
+        ⬆ Add to Shared Folder
+      </button>
+      <p class="form-note" id="uploadSubmitNote" style="text-align:center;margin-top:8px;">Select a file above to begin the academic content check.</p>
+    </form>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <span>An independent student-run resource hub for Victoria University Uganda. This platform is not an official university system.</span>
+      <span>Shared via Firebase &amp; Local Storage.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<!-- Application Scripts -->
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ai-monitor.js"></script>
+
+<script>
+const CATEGORY_LABEL = {
+  lectures: 'Missed Lecture Notes',
+  papers: 'Past Papers',
+  summaries: 'Summarized Notes',
+  selftest: 'Self-Test Questions'
+};
+
+let activeCourse = null;
+let activeCategory = new URLSearchParams(location.search).get('cat') || 'lectures';
+let coursesCache = [];
+let resourcesCache = [];
+
+function fileIconSvg(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6l5 5v13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 12h6M9 16h6"/></svg>`;
+}
+
+function renderCourseList(){
+  const list = document.getElementById('courseList');
+  const dropdownSelect = document.getElementById('courseDropdownSelect');
+  
+  const courseNames = coursesCache.map(c => c.name);
+  if(!activeCourse && courseNames.length) activeCourse = courseNames[0];
+
+  // Populate Sidebar buttons
+  const buttonsHtml = courseNames.map(c => {
+    const count = resourcesCache.filter(r => r.course === c).length;
+    return `<button data-course="${c}" class="${c === activeCourse ? 'active' : ''}">
+      <span>${c}</span><span class="count">${count}</span>
+    </button>`;
+  }).join('');
+
+  list.innerHTML = buttonsHtml;
+
+  // Populate Dropdown Select
+  dropdownSelect.innerHTML = courseNames.map(c =>
+    `<option value="${c}" ${c === activeCourse ? 'selected' : ''}>${c}</option>`
+  ).join('');
+
+  list.querySelectorAll('button[data-course]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCourse = btn.dataset.course;
+      dropdownSelect.value = activeCourse;
+      renderCourseList();
+      renderResources();
+    });
+  });
+
+  dropdownSelect.onchange = (e) => {
+    activeCourse = e.target.value;
+    renderCourseList();
+    renderResources();
+  };
+
+  const addBtn = document.getElementById('addCourseBtn');
+  if(addBtn) {
+    addBtn.onclick = async () => {
+      const input = document.getElementById('newCourseInput');
+      const val = input.value.trim();
+      if(!val) return;
+      await STORE.addCourse(val);
+      activeCourse = val;
+      input.value = '';
+      showToast(`"${val}" folder created`);
+    };
+  }
+}
+
+function renderResources(){
+  const list = document.getElementById('resourceList');
+  const empty = document.getElementById('resourceEmpty');
+  const emptyMsgText = document.getElementById('emptyMsgText');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  const query = document.getElementById('resourceSearch').value.trim().toLowerCase();
+
+  let items = resourcesCache.filter(r => r.course === activeCourse && (r.category === activeCategory || r.resourceType === activeCategory));
+  if(query) {
+    items = items.filter(r => 
+      (r.title && r.title.toLowerCase().includes(query)) || 
+      (r.uploader && r.uploader.toLowerCase().includes(query))
+    );
+  }
+
+  list.innerHTML = '';
+  
+  if (items.length === 0) {
+    empty.style.display = 'block';
+    if(query) {
+      emptyMsgText.textContent = 'No resources match your search term in this category.';
+      clearSearchBtn.style.display = 'inline-block';
+    } else {
+      emptyMsgText.textContent = 'Be the first to upload something to this folder.';
+      clearSearchBtn.style.display = 'none';
+    }
+  } else {
+    empty.style.display = 'none';
+  }
+
+  const currentUid = getCurrentUserId();
+
+  items.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'resource-item';
+    const downloadable = !!(r.fileURL || r.downloadURL || r.fileName);
+    const downloadHref = r.downloadURL || r.fileURL || '#';
+    let when = 'just now';
+    if(r.createdAt){
+      when = r.createdAt.toDate ? timeAgo(r.createdAt.toDate().toISOString()) : timeAgo(r.createdAt);
+    }
+    
+    const isOwner = r.ownerId === currentUid || !FIREBASE_READY;
+
+    row.innerHTML = `
+      <div class="file-icon">${fileIconSvg()}</div>
+      <div class="resource-info">
+        <h4>${r.title}</h4>
+        <div class="meta">
+          <span>${r.fileName || r.originalFileName || 'Document'}${r.fileSize ? ' · ' + fileSizeLabel(r.fileSize) : ''}</span>
+          <span>Uploaded by ${r.uploader || r.uploadedBy || 'Student'}</span>
+          <span>${when}</span>
+          <span class="resource-tag">${CATEGORY_LABEL[r.category || r.resourceType] || 'Note'}</span>
+        </div>
+      </div>
+      <div class="resource-actions">
+        ${downloadable
+          ? `<a class="btn btn-primary btn-small" target="_blank" rel="noopener" download="${r.fileName || 'document'}" href="${downloadHref}">Download / View</a>`
+          : `<span class="form-note" style="white-space:nowrap;">No file</span>`}
+        ${isOwner ? `<button class="btn btn-danger btn-small delete-btn" data-id="${r.id}" data-path="${r.storagePath || ''}" data-owner="${r.ownerId || ''}">Delete</button>` : ''}
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const resId = btn.dataset.id;
+      const storagePath = btn.dataset.path;
+      const ownerId = btn.dataset.owner;
+
+      if (confirm("Are you sure you want to delete this resource? This will remove the file from Firebase Storage and Firestore.")) {
+        btn.disabled = true;
+        btn.textContent = 'Deleting…';
+        try {
+          await STORE.deleteResource(resId, storagePath, ownerId);
+          showToast('Resource deleted successfully.');
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || 'Delete failed.');
+          btn.disabled = false;
+          btn.textContent = 'Delete';
+        }
+      }
+    });
+  });
+}
+
+document.getElementById('categoryTabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-cat]');
+  if(!btn) return;
+  document.querySelectorAll('#categoryTabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCategory = btn.dataset.cat;
+  renderResources();
+});
+
+document.getElementById('resourceSearch').addEventListener('input', renderResources);
+document.getElementById('clearSearchBtn').addEventListener('click', () => {
+  document.getElementById('resourceSearch').value = '';
+  renderResources();
+});
+
+const upFacEl = document.getElementById('upFaculty');
+const upCrsEl = document.getElementById('upCourse');
+if (upFacEl && upCrsEl) {
+  upFacEl.addEventListener('change', () => {
+    populateCourseDropdown(upFacEl, upCrsEl, { placeholderText: 'Select Course...' });
+    const file = document.getElementById('upFile').files[0];
+    if (file && upCrsEl.value) runAiCheck(file);
+  });
+}
+
+function openUploadModal(){
+  const upFac = document.getElementById('upFaculty');
+  const upCrs = document.getElementById('upCourse');
+  if (upFac && upCrs) {
+    upFac.value = '';
+    populateCourseDropdown(upFac, upCrs, { placeholderText: 'Select Course...' });
+  }
+  document.getElementById('upCategory').value = activeCategory;
+  document.getElementById('uploadContext').textContent = `Adding to: ${activeCourse || 'Shared Drive'} / ${CATEGORY_LABEL[activeCategory]}`;
+  openModal('uploadModal');
+}
+document.getElementById('uploadTrigger').addEventListener('click', openUploadModal);
+
+/* -------------------------------------------------------
+   AI Content Monitor Integration for Upload Flow
+------------------------------------------------------- */
+let currentAiStatus = null; // 'approved' | 'mismatch' | 'rejected' | 'error' | null
+
+function showAiResult(result){
+  const panel = document.getElementById('aiCheckPanel');
+  const scanning = document.getElementById('aiScanning');
+  const resultEl = document.getElementById('aiResult');
+  const icon = document.getElementById('aiResultIcon');
+  const title = document.getElementById('aiResultTitle');
+  const msg = document.getElementById('aiResultMsg');
+  const details = document.getElementById('aiResultDetails');
+  const confFill = document.getElementById('aiConfFill');
+  const confPct = document.getElementById('aiConfPct');
+  const mismatchActions = document.getElementById('aiMismatchActions');
+  const submitBtn = document.getElementById('uploadSubmitBtn');
+  const submitNote = document.getElementById('uploadSubmitNote');
+  const step2 = document.getElementById('stepIndicator2');
+  const step3 = document.getElementById('stepIndicator3');
+
+  scanning.style.display = 'none';
+  resultEl.classList.add('visible');
+  resultEl.className = 'ai-result visible';
+  mismatchActions.style.display = 'none';
+  currentAiStatus = result.status;
+
+  confFill.style.width = result.confidence + '%';
+  confPct.textContent = result.confidence + '%';
+  confFill.className = 'ai-confidence-fill';
+
+  if(result.status === 'approved'){
+    resultEl.classList.add('ai-result-approved');
+    icon.textContent = '🟢';
+    title.textContent = '🟢 Relevant — Upload Approved';
+    msg.textContent = result.message;
+    details.textContent = result.details;
+    confFill.classList.add('approved');
+    submitBtn.disabled = false;
+    submitNote.textContent = 'This content appears relevant to the selected UVTAB-based course. Your resource is ready to be uploaded.';
+    step2.className = 'upload-step done';
+    step2.querySelector('.upload-step-num').textContent = '✓';
+    step3.className = 'upload-step active';
+  } else if(result.status === 'mismatch'){
+    resultEl.classList.add('ai-result-mismatch');
+    icon.textContent = '🟡';
+    title.textContent = '⚠️ Content Mismatch Detected';
+    msg.textContent = result.message;
+    details.textContent = result.details;
+    confFill.classList.add('mismatch');
+    mismatchActions.style.display = 'flex';
+    submitBtn.disabled = true;
+    submitNote.textContent = 'Please verify the correct course is selected before uploading.';
+    step2.className = 'upload-step active';
+  } else if(result.status === 'rejected'){
+    resultEl.classList.add('ai-result-rejected');
+    icon.textContent = '🔴';
+    title.textContent = '❌ Upload Rejected';
+    msg.textContent = result.message;
+    details.textContent = result.details;
+    confFill.classList.add('rejected');
+    submitBtn.disabled = true;
+    submitNote.textContent = 'This file does not appear to contain relevant academic material for the selected course. Please upload an appropriate educational resource.';
+    step2.className = 'upload-step active';
+  } else {
+    resultEl.classList.add('ai-result-error');
+    icon.textContent = '⚠️';
+    title.textContent = 'Content Check Unavailable';
+    msg.textContent = result.message || 'Could not analyse this file.';
+    details.textContent = 'You may still try to upload — please ensure the file is a UVTAB academic resource.';
+    confFill.style.width = '0%';
+    submitBtn.disabled = false;
+    submitNote.textContent = 'Content check skipped. Please ensure this is a UVTAB academic resource.';
+    step2.className = 'upload-step done';
+    step3.className = 'upload-step active';
+  }
+}
+
+async function runAiCheck(file){
+  const panel = document.getElementById('aiCheckPanel');
+  const scanning = document.getElementById('aiScanning');
+  const resultEl = document.getElementById('aiResult');
+  const submitBtn = document.getElementById('uploadSubmitBtn');
+  const step2 = document.getElementById('stepIndicator2');
+
+  panel.style.display = 'block';
+  scanning.style.display = 'flex';
+  resultEl.classList.remove('visible');
+  resultEl.className = 'ai-result';
+  submitBtn.disabled = true;
+  step2.className = 'upload-step active';
+  currentAiStatus = null;
+
+  const selectedCourse = document.getElementById('upCourse').value;
+
+  try{
+    const result = await AIMonitor.analyzeFile(file, selectedCourse);
+    showAiResult(result);
+  } catch(e){
+    showAiResult({ status:'error', confidence:0, message:'Content analysis encountered an error.', details: e.message || '' });
+  }
+}
+
+// Re-run AI check when course is changed after a file has been picked
+document.getElementById('upCourse').addEventListener('change', () => {
+  const file = document.getElementById('upFile').files[0];
+  if(file && document.getElementById('upCourse').value) runAiCheck(file);
+});
+
+// Trigger AI check when file is selected
+document.getElementById('upFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  // Reset step indicators
+  document.getElementById('stepIndicator1').className = 'upload-step done';
+  document.getElementById('stepIndicator1').querySelector('.upload-step-num').textContent = '✓';
+  runAiCheck(file);
+});
+
+// "Change Course" mismatch action — focus the course dropdown
+document.getElementById('aiChangeCourse').addEventListener('click', () => {
+  document.getElementById('upCourse').focus();
+  document.getElementById('aiMismatchActions').style.display = 'none';
+});
+
+document.getElementById('uploadForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  if(currentAiStatus === 'rejected'){
+    showToast('Upload blocked — file did not pass the academic content check.');
+    return;
+  }
+  const submitBtn = e.target.querySelector('button[type=submit]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Uploading…';
+  const file = document.getElementById('upFile').files[0];
+  const resource = {
+    faculty: document.getElementById('upFaculty').value,
+    course: document.getElementById('upCourse').value,
+    category: document.getElementById('upCategory').value,
+    title: document.getElementById('upTitle').value,
+    uploader: document.getElementById('upUploader').value
+  };
+  try{
+    await STORE.addResource(resource, file);
+    closeModal('uploadModal');
+    e.target.reset();
+    // Reset AI panel
+    document.getElementById('aiCheckPanel').style.display = 'none';
+    currentAiStatus = null;
+    document.getElementById('stepIndicator1').className = 'upload-step done';
+    document.getElementById('stepIndicator1').querySelector('.upload-step-num').textContent = '1';
+    document.getElementById('stepIndicator2').className = 'upload-step';
+    document.getElementById('stepIndicator2').querySelector('.upload-step-num').textContent = '2';
+    document.getElementById('stepIndicator3').className = 'upload-step';
+    document.getElementById('uploadSubmitBtn').disabled = true;
+    document.getElementById('uploadSubmitNote').textContent = 'Select a file above to begin the academic content check.';
+    activeCourse = resource.course;
+    activeCategory = resource.category;
+    document.querySelectorAll('#categoryTabs button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.cat === activeCategory);
+    });
+    renderCourseList();
+    renderResources();
+    showToast('✅ Resource uploaded to shared folder!');
+  }catch(err){
+    console.error(err);
+    showToast('Upload failed — please try again');
+  }finally{
+    submitBtn.disabled = (currentAiStatus === 'rejected'); submitBtn.textContent = '⬆ Add to Shared Folder';
+  }
+});
+
+document.querySelectorAll('#categoryTabs button').forEach(b=>{
+  b.classList.toggle('active', b.dataset.cat === activeCategory);
+});
+
+if(FIREBASE_READY){
+  seedIfNeeded().then(()=>{
+    STORE.watchCourses(list=>{
+      coursesCache = list;
+      renderCourseList();
+      renderResources();
+    });
+    STORE.watchResources(list=>{
+      resourcesCache = list;
+      renderCourseList();
+      renderResources();
+    });
+  });
+} else {
+  STORE.watchCourses(list=>{
+    coursesCache = list;
+    renderCourseList();
+    renderResources();
+  });
+  STORE.watchResources(list=>{
+    resourcesCache = list;
+    renderCourseList();
+    renderResources();
+  });
+}
+</script>
+</body>
+</html>

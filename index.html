@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VU Notes — Victoria University Student Resource Hub</title>
+<meta name="description" content="Past papers, missed-lecture notes, summaries, self-test questions and tutor bookings for Victoria University students.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,600&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   VU NOTES — Design tokens
+   Palette pulled from the Victoria University crest:
+   red / sky blue / silver, set on a warm paper ground.
+   Signature motif: the crest's four quadrants, reused as a
+   structural device (dividers, markers, the "seal") — not
+   a copy of the crest artwork itself.
+   ========================================================= */
+
+:root{
+  --vu-red: #C81E2C;
+  --vu-red-dark: #8F1420;
+  --vu-blue: #4E8FD1;
+  --vu-blue-dark: #2C5680;
+  --vu-silver: #A7ABB3;
+  --vu-silver-light: #DCDEE2;
+  --vu-ink: #191B20;
+  --vu-ink-soft: #4B4F58;
+  --vu-paper: #F6F4EF;
+  --vu-paper-raised: #FFFFFF;
+
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-l: 20px;
+
+  --shadow-card: 0 1px 2px rgba(25,27,32,0.06), 0 8px 24px rgba(25,27,32,0.06);
+  --shadow-lift: 0 4px 10px rgba(25,27,32,0.10), 0 16px 40px rgba(25,27,32,0.10);
+
+  --container: 1120px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+  margin:0;
+  background: var(--vu-paper);
+  color: var(--vu-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+img{ max-width:100%; display:block; }
+
+a{ color: var(--vu-blue-dark); }
+
+h1,h2,h3,h4{
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.12;
+  margin: 0 0 .5em;
+  letter-spacing: -0.01em;
+}
+
+p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
+
+.container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--vu-red-dark);
+  margin-bottom: 14px;
+}
+.eyebrow::before{
+  content:"";
+  width: 18px; height: 4px;
+  background: var(--vu-red);
+  display:inline-block;
+  border-radius: 2px;
+}
+
+/* ---------- Quadrant mark (signature element) ---------- */
+.quad-mark{
+  --s: 20px;
+  width: var(--s); height: var(--s);
+  display:inline-grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink:0;
+  box-shadow: 0 0 0 1px rgba(25,27,32,0.08);
+}
+.quad-mark span:nth-child(1){ background: var(--vu-red); }
+.quad-mark span:nth-child(2){ background: var(--vu-blue); }
+.quad-mark span:nth-child(3){ background: var(--vu-blue); }
+.quad-mark span:nth-child(4){ background: var(--vu-red); }
+
+/* ---------- Setup banner (shown until Firebase is connected) ---------- */
+.setup-banner{
+  background: var(--vu-ink);
+  color: #fff;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.setup-banner code{
+  background: rgba(255,255,255,0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+/* ---------- Header / nav ---------- */
+.site-header{
+  position: sticky; top:0; z-index: 50;
+  background: rgba(246,244,239,0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--vu-silver-light);
+}
+.nav{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 0;
+}
+.brand{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; color: var(--vu-ink);
+}
+.brand-word{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+.brand-word b{ color: var(--vu-red); font-style:italic; }
+
+.nav-links{
+  display:flex; align-items:center; gap: 4px;
+  list-style:none; margin:0; padding:0;
+}
+.nav-links a{
+  text-decoration:none;
+  color: var(--vu-ink-soft);
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-s);
+  transition: background .15s ease, color .15s ease;
+}
+.nav-links a:hover{ background: var(--vu-silver-light); color: var(--vu-ink); }
+.nav-links a.active{ color: var(--vu-red-dark); background: #F3D9DC; }
+
+.nav-cta{
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color:#fff !important;
+  background: var(--vu-ink) !important;
+}
+.nav-cta:hover{ background: var(--vu-red-dark) !important; }
+
+.nav-toggle{ display:none; }
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14.5px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration:none;
+  transition: transform .12s ease, box-shadow .12s ease, background .15s ease;
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{ background: var(--vu-red); color:#fff; }
+.btn-primary:hover{ background: var(--vu-red-dark); box-shadow: var(--shadow-lift); }
+
+.btn-secondary{ background: var(--vu-ink); color:#fff; }
+.btn-secondary:hover{ background:#000; }
+
+.btn-outline{ background: transparent; color: var(--vu-ink); border-color: var(--vu-ink); }
+.btn-outline:hover{ background: var(--vu-ink); color:#fff; }
+
+.btn-ghost{ background: transparent; color: var(--vu-blue-dark); padding: 8px 4px; }
+.btn-ghost:hover{ text-decoration: underline; }
+
+.btn-block{ width:100%; }
+.btn-small{ padding: 8px 16px; font-size: 13.5px; }
+
+/* ---------- Hero ---------- */
+.hero{
+  position: relative;
+  overflow: hidden;
+  padding: 84px 0 96px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #090a0f;
+  background-image: linear-gradient(to left, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.72) 38%, rgba(0, 0, 0, 0.45) 70%, rgba(10, 12, 16, 0.88) 100%), url('images/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #ffffff;
+}
+.hero::before{
+  content:"";
+  position:absolute; top:-120px; right:-160px;
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, rgba(78, 143, 209, 0.35) 0%, transparent 70%);
+  opacity: .6;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero::after{
+  content:"";
+  position:absolute; bottom:-160px; left:-140px;
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, rgba(200, 30, 44, 0.35) 0%, transparent 70%);
+  opacity: .5;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-grid{
+  position: relative;
+  display:grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 56px;
+  align-items:center;
+  z-index: 1;
+}
+.hero .eyebrow{
+  color: #ff7b88;
+}
+.hero .eyebrow::before{
+  background: #ff4d5d;
+}
+.hero h1{
+  font-size: clamp(36px, 5vw, 56px);
+  margin-bottom: .35em;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+.hero h1 em{
+  font-style: italic;
+  color: #ff5d6c;
+}
+.hero-lead{
+  font-size: 18px;
+  max-width: 46ch;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+.hero-actions{ display:flex; gap:14px; margin-top: 28px; flex-wrap:wrap; }
+.hero .btn-outline{
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+.hero .btn-outline:hover{
+  background: #ffffff;
+  color: var(--vu-ink);
+  border-color: #ffffff;
+}
+
+.hero-stats{
+  display:flex; gap: 28px; margin-top: 40px; flex-wrap: wrap;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.hero-stat b{
+  display:block; font-family: var(--font-display); font-size: 26px; color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.hero-stat span{
+  font-size: 12.5px; color: rgba(255, 255, 255, 0.75); text-transform: uppercase; letter-spacing: .06em;
+}
+
+/* Hero shield-inspired panel, built from the quadrant motif, not the crest artwork */
+.hero-shield{
+  position: relative;
+  aspect-ratio: 4/5;
+  max-width: 380px;
+  margin-left: auto;
+  border-radius: var(--radius-l) var(--radius-l) 40% 40% / var(--radius-l) var(--radius-l) 18% 18%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+}
+.hero-shield .q{
+  display:flex; align-items:center; justify-content:center;
+  position: relative;
+  font-family: var(--font-display);
+  color: #fff;
+  font-size: 15px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+.hero-shield .q:hover{
+  filter: brightness(1.15);
+}
+.hero-shield .q1{ background: rgba(200, 30, 44, 0.88); }
+.hero-shield .q2{ background: rgba(78, 143, 209, 0.88); }
+.hero-shield .q3{ background: rgba(44, 86, 128, 0.88); }
+.hero-shield .q4{ background: rgba(143, 20, 32, 0.88); }
+.hero-shield .q svg{ width: 42%; height: 42%; opacity: .92; }
+
+/* ---------- Section shell ---------- */
+.section{ padding: 76px 0; }
+.section-alt{ background: var(--vu-paper-raised); border-top:1px solid var(--vu-silver-light); border-bottom:1px solid var(--vu-silver-light); }
+.section-head{ max-width: 640px; margin-bottom: 40px; }
+.section-head p{ font-size: 16.5px; }
+
+/* ---------- Quadrant feature grid ---------- */
+.quad-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.quad-card{
+  background: var(--vu-paper-raised);
+  border: 1px solid var(--vu-silver-light);
+  border-radius: var(--radius-m);
+  padding: 26px 22px;
+  text-decoration:none;
+  color: var(--vu-ink);
+  box-shadow: var(--shadow-card);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  display:flex; flex-direction:column; gap:14px;
+  border-top: 4px solid var(--vu-silver);
+}
+.quad-card:hover{ transform: translateY(-4px); box-shadow: var(--shadow-lift); }
+.quad-card:nth-child(1){ border-top-color: var(--vu-red); }
+.quad-card:nth-child(2){ border-top-color: var(--vu-blue); }
+.quad-card:nth-child(3){ border-top-color: var(--vu-blue-dark); }
+.quad-card:nth-child(4){ border-top-color: var(--vu-red-dark); }
+.quad-card .icon{
+  width: 40px; height:40px;
+  border-radius: 10px;
+  display:flex; align-items:center; justify-content:center;
+  background: var(--vu-paper);
+}
+.quad-card .icon svg{ width: 20px; height:20px; }
+.quad-card h3{ font-size: 18px; margin-bottom: 4px; }
+.quad-card p{ font-size: 14.5px; margin-bottom: 0; }
+.quad-card .go{ margin-top:auto; font-size: 13px; font-weight:700; color: var(--vu-red-dark); }
+
+/* ---------- How it works ---------- */
+.steps{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.step{
+  padding: 24px 0 0;
+  border-top: 1px solid var(--vu-silver-light);
+}
+.step .num{
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--vu-silver);
+  display:block;
+  margin-bottom: 10px;
+}
+.step h3{ font-size: 17px; }
+.step p{ font-size: 14.5px; }
+
+/* ---------- CTA band ---------- */
+.cta-band{
+  background: var(--vu-ink);
+  color: #fff;
+  border-radius: var(--radius-l);
+  padding: 56px;
+  display:flex; align-items:center; justify-content:space-between; gap: 32px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow:hidden;
+}
+.cta-band::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    linear-gradient(135deg, var(--vu-red) 0 25%, transparent 25% 50%, var(--vu-blue) 50% 75%, transparent 75%);
+  opacity: .10;
+}
+.cta-band h2{ color:#fff; margin-bottom:.3em; max-width: 20ch; position:relative; }
+.cta-band p{ color: #C9CBD2; max-width: 40ch; position:relative; }
+.cta-band .cta-actions{ position:relative; display:flex; gap:12px; flex-wrap:wrap; }
+
+/* ---------- Footer ---------- */
+.site-footer{
+  border-top: 1px solid var(--vu-silver-light);
+  padding: 44px 0 30px;
+  margin-top: 40px;
+}
+.footer-grid{
+  display:flex; justify-content:space-between; gap: 32px; flex-wrap:wrap;
+  margin-bottom: 24px;
+}
+.footer-brand p{ max-width: 34ch; font-size: 14px; }
+.footer-cols{ display:flex; gap: 56px; flex-wrap:wrap; }
+.footer-col h4{ font-size: 13px; text-transform:uppercase; letter-spacing:.06em; color: var(--vu-ink-soft); margin-bottom: 12px; }
+.footer-col a{ display:block; font-size: 14px; color: var(--vu-ink); text-decoration:none; margin-bottom: 8px; }
+.footer-col a:hover{ color: var(--vu-red-dark); }
+.footer-bottom{
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap: 8px;
+  font-size: 12.5px; color: var(--vu-silver);
+  border-top: 1px solid var(--vu-silver-light);
+  padding-top: 18px;
+}
+
+/* ---------- Page header (inner pages) ---------- */
+.page-head{
+  padding: 48px 0 36px;
+  border-bottom: 1px solid var(--vu-silver-light);
+}
+.page-head h1{ font-size: clamp(28px, 4vw, 40px); }
+.page-head p{ font-size: 16.5px; max-width: 60ch; }
+
+/* ---------- Cards: tutors ---------- */
+.filter-bar{
+  display:flex; gap: 12px; flex-wrap:wrap; align-items:center;
+  margin-bottom: 32px;
+}
+.filter-bar select, .filter-bar input[type="search"]{
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--vu-silver);
+  background: #fff;
+  color: var(--vu-ink);
+}
+.filter-bar input[type="search"]{ flex:1; min-width: 200px; }
+
+.tutor-grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+.tutor-card{
+  background: #fff;
+  border: 1px solid var(--vu-silver-light);
+  border-radius: var(--radius-m);
+  overflow:hidden;
+  box-shadow: var(--shadow-card);
+  display:flex; flex-direction:column;
+}
+.tutor-photo{
+  aspect-ratio: 4/3;
+  background: linear-gradient(135deg, var(--vu-blue) 0%, var(--vu-blue-dark) 100%);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-family: var(--font-display); font-size: 34px;
+  position:relative;
+  overflow:hidden;
+}
+.tutor-photo img{ width:100%; height:100%; object-fit:cover; }
+.tutor-subject-tag{
+  position:absolute; top:10px; left:10px;
+  background: rgba(255,255,255,0.92);
+  color: var(--vu-ink);
+  font-size: 11.5px; font-weight:700;
+  padding: 4px 10px; border-radius: 999px;
+  font-family: var(--font-mono);
+}
+.tutor-body{ padding: 18px 20px 20px; display:flex; flex-direction:column; gap: 8px; flex:1; }
+.tutor-body h3{ font-size: 17px; margin-bottom: 0; }
+.tutor-meta{ font-size: 13.5px; color: var(--vu-ink-soft); display:flex; flex-direction:column; gap:4px; }
+.tutor-meta span{ display:flex; align-items:center; gap:8px; }
+.tutor-actions{ margin-top: 12px; display:flex; gap:10px; }
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position: fixed; inset:0;
+  background: rgba(25,27,32,0.55);
+  display:none; align-items:center; justify-content:center;
+  padding: 20px; z-index: 100;
+}
+.modal-overlay.open{ display:flex; }
+.modal{
+  background:#fff;
+  border-radius: var(--radius-l);
+  max-width: 480px; width:100%;
+  padding: 32px;
+  max-height: 90vh; overflow-y:auto;
+  box-shadow: var(--shadow-lift);
+  position: relative;
+}
+.modal-close{
+  position:absolute; top:16px; right:16px;
+  background: var(--vu-paper); border:none;
+  width:32px; height:32px; border-radius:50%;
+  cursor:pointer; font-size: 16px; color: var(--vu-ink-soft);
+}
+.modal h2{ font-size: 22px; margin-bottom: 4px; }
+.modal .modal-sub{ font-size: 14px; color: var(--vu-ink-soft); margin-bottom: 22px; }
+
+/* ---------- Forms ---------- */
+.field{ margin-bottom: 16px; }
+.field label{
+  display:block; font-size: 13px; font-weight:700; margin-bottom: 6px; color: var(--vu-ink);
+}
+.field input, .field select, .field textarea{
+  width:100%;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  padding: 11px 13px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--vu-silver);
+  background: #fff;
+  color: var(--vu-ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus, .field input[type=file]:focus{
+  outline: 2px solid var(--vu-blue);
+  outline-offset: 1px;
+}
+.field textarea{ resize: vertical; min-height: 80px; }
+.field-row{ display:flex; gap:12px; }
+.field-row .field{ flex:1; }
+.form-note{ font-size: 12.5px; color: var(--vu-silver); margin-top: 4px; }
+
+.toast{
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--vu-ink); color:#fff;
+  padding: 14px 22px; border-radius: 999px;
+  font-size: 14px; font-weight:600;
+  display:flex; align-items:center; gap:10px;
+  opacity:0; pointer-events:none;
+  transition: opacity .25s ease, transform .25s ease;
+  z-index: 200;
+  box-shadow: var(--shadow-lift);
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); pointer-events:auto; }
+.toast .dot{ width:8px; height:8px; border-radius:50%; background: var(--vu-blue); }
+
+/* ---------- Notes / folders page ---------- */
+.notes-layout{
+  display:grid;
+  grid-template-columns: 240px 1fr;
+  gap: 32px;
+  align-items:start;
+}
+.course-list{
+  background:#fff;
+  border:1px solid var(--vu-silver-light);
+  border-radius: var(--radius-m);
+  padding: 8px;
+  position: sticky; top: 90px;
+}
+.course-list button{
+  width:100%; text-align:left;
+  background:none; border:none;
+  padding: 10px 12px;
+  border-radius: var(--radius-s);
+  font-size: 14px; font-weight:600;
+  color: var(--vu-ink-soft);
+  cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.course-list button:hover{ background: var(--vu-paper); }
+.course-list button.active{ background: #F3D9DC; color: var(--vu-red-dark); }
+.course-list button .count{
+  font-family: var(--font-mono); font-size: 11px; color: var(--vu-silver);
+}
+.course-list button.active .count{ color: var(--vu-red-dark); }
+.add-course{
+  display:flex; gap:6px; padding: 10px 6px 4px;
+  border-top: 1px solid var(--vu-silver-light);
+  margin-top: 6px;
+}
+.add-course input{
+  flex:1; font-size:13px; padding:8px 10px;
+  border-radius: var(--radius-s); border:1px solid var(--vu-silver);
+}
+.add-course button{
+  width:auto; background: var(--vu-ink); color:#fff; padding: 8px 12px;
+  border-radius: var(--radius-s); font-size: 13px;
+}
+
+.category-tabs{
+  display:flex; gap:8px; margin-bottom: 24px; flex-wrap:wrap;
+}
+.category-tabs button{
+  background:#fff; border: 1px solid var(--vu-silver-light);
+  padding: 9px 16px; border-radius: 999px;
+  font-size: 13.5px; font-weight:700; cursor:pointer;
+  color: var(--vu-ink-soft);
+}
+.category-tabs button.active{ background: var(--vu-ink); color:#fff; border-color: var(--vu-ink); }
+
+.resource-toolbar{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom: 18px; gap: 12px; flex-wrap:wrap;
+}
+.resource-toolbar input[type="search"]{
+  padding: 10px 14px; border-radius: var(--radius-s); border:1px solid var(--vu-silver);
+  min-width: 220px; font-size:14px;
+}
+
+.resource-list{ display:flex; flex-direction:column; gap: 10px; }
+.resource-item{
+  background:#fff; border:1px solid var(--vu-silver-light);
+  border-radius: var(--radius-m);
+  padding: 16px 18px;
+  display:flex; align-items:center; gap: 16px;
+}
+.resource-item .file-icon{
+  width:42px; height:42px; border-radius: 10px;
+  background: var(--vu-paper);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.resource-item .file-icon svg{ width:20px; height:20px; color: var(--vu-red-dark); }
+.resource-info{ flex:1; min-width:0; }
+.resource-info h4{ font-family: var(--font-body); font-weight:700; font-size: 14.5px; margin:0 0 3px; color: var(--vu-ink); }
+.resource-info .meta{ font-size: 12.5px; color: var(--vu-silver); display:flex; gap:10px; flex-wrap:wrap; }
+.resource-tag{
+  font-family: var(--font-mono); font-size: 10.5px; text-transform:uppercase;
+  padding: 3px 8px; border-radius: 999px; background: var(--vu-paper); color: var(--vu-ink-soft);
+}
+.empty-state{
+  text-align:center; padding: 60px 20px; color: var(--vu-silver);
+  border: 1.5px dashed var(--vu-silver-light); border-radius: var(--radius-m);
+}
+.empty-state h3{ color: var(--vu-ink-soft); font-size: 16px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px){
+  .hero-grid{ grid-template-columns: 1fr; }
+  .hero-shield{ margin: 0 auto; max-width: 280px; }
+  .quad-grid{ grid-template-columns: 1fr 1fr; }
+  .steps{ grid-template-columns: 1fr; }
+  .tutor-grid{ grid-template-columns: 1fr 1fr; }
+  .notes-layout{ grid-template-columns: 1fr; }
+  .course-list{ position:static; }
+}
+@media (max-width: 640px){
+  .nav-links{
+    position: fixed; top: 62px; left:0; right:0;
+    background: rgba(9, 10, 15, 0.96);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex-direction: column; align-items:stretch; padding: 20px 24px 28px;
+    gap: 12px;
+    display:none;
+    z-index: 999;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.85);
+  }
+  .nav-links.open{ display:flex; }
+  .nav-links a{
+    padding: 14px 20px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font-size: 16px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+  }
+  .nav-toggle{
+    display:block; background:none; border:none; cursor:pointer;
+    width: 44px; height:44px; padding: 8px; color: #ffffff;
+  }
+  .quad-grid{ grid-template-columns: 1fr; }
+  .tutor-grid{ grid-template-columns: 1fr; }
+  .cta-band{ flex-direction:column; align-items:flex-start; padding: 36px 24px; }
+  .field-row{ flex-direction:column; gap:0; }
+}
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav container">
+    <a href="index.html" class="brand">
+      <span class="quad-mark"><span></span><span></span><span></span><span></span></span>
+      <span class="brand-word">VU <b>Notes</b></span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="notes.html">Notes &amp; Resources</a></li>
+      <li><a href="tutors.html">Book a Tutor</a></li>
+      <li><a href="admin.html">Admin Dashboard</a></li>
+      <li><a href="notes.html#upload" class="nav-cta">Upload Notes</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">Built by students, for students</p>
+      <h1>Everything you missed in class, <em>right here.</em></h1>
+      <p class="hero-lead">VU Notes is Victoria University's shared study hub — past papers, missed-lecture notes, summaries and self-test questions, all organised by course. Can't figure something out alone? Book a peer tutor in a couple of clicks.</p>
+      <div class="hero-actions">
+        <a href="notes.html" class="btn btn-primary">Browse notes &amp; papers</a>
+        <a href="tutors.html" class="btn btn-outline">Book a tutor</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>4</b><span>Resource types</span></div>
+        <div class="hero-stat"><b>6+</b><span>Faculties covered</span></div>
+        <div class="hero-stat"><b>24/7</b><span>Always open</span></div>
+      </div>
+    </div>
+    <div class="hero-shield" aria-hidden="true">
+      <div class="q q1">Notes</div>
+      <div class="q q2">Papers</div>
+      <div class="q q3">Summaries</div>
+      <div class="q q4">Self-Tests</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">What you'll find</p>
+      <h2>Four ways to catch up and stay ahead</h2>
+      <p>Every course folder holds the same four categories, so you always know where to look.</p>
+    </div>
+    <div class="quad-grid">
+      <a class="quad-card" href="notes.html?cat=lectures">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 3v5h5"/><path d="M8 13h8M8 17h5"/></svg></span>
+        <h3>Missed Lecture Notes</h3>
+        <p>Classmates upload notes from the lecture you couldn't make it to.</p>
+        <span class="go">Open folder →</span>
+      </a>
+      <a class="quad-card" href="notes.html?cat=papers">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6l5 5v13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 12h6M9 16h6M9 8h2"/></svg></span>
+        <h3>Past Papers</h3>
+        <p>Previous exam and CAT papers shared by lecturers and seniors.</p>
+        <span class="go">Open folder →</span>
+      </a>
+      <a class="quad-card" href="notes.html?cat=summaries">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h13"/></svg></span>
+        <h3>Summarized Notes</h3>
+        <p>Condensed, revision-ready versions of dense course material.</p>
+        <span class="go">Open folder →</span>
+      </a>
+      <a class="quad-card" href="notes.html?cat=selftest">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.6-1.4c.5.8.2 1.5-.6 2.1-.8.6-1.5 1-1.5 2.3"/><path d="M12 17h.01"/></svg></span>
+        <h3>Self-Test Questions</h3>
+        <p>Quiz yourself before the real thing with peer-written practice questions.</p>
+        <span class="go">Open folder →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2>Think of it like a shared drive for the whole class</h2>
+      <p>Anyone can open a course folder, drop their notes in, and pull down whatever someone else has shared.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="num">01</span>
+        <h3>Pick a course folder</h3>
+        <p>Choose an existing course or start a new folder if yours isn't listed yet.</p>
+      </div>
+      <div class="step">
+        <span class="num">02</span>
+        <h3>Upload or browse</h3>
+        <p>Add your notes under the right category, or download what a classmate already shared.</p>
+      </div>
+      <div class="step">
+        <span class="num">03</span>
+        <h3>Stuck? Book a tutor</h3>
+        <p>Browse peer tutors by subject and book a session directly with their contact details.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="cta-band">
+      <div>
+        <h2>Missed a lecture this week?</h2>
+        <p>Check the course folder first — chances are someone already uploaded their notes.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="notes.html" class="btn btn-primary">Browse notes</a>
+        <a href="tutors.html" class="btn btn-outline" style="color:#fff;border-color:#fff;">Book a tutor</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand" style="margin-bottom:12px;">
+          <span class="quad-mark"><span></span><span></span><span></span><span></span></span>
+          <span class="brand-word">VU <b>Notes</b></span>
+        </a>
+        <p>An independent student-run resource hub for Victoria University Uganda. This platform is not an official university system.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>Site</h4>
+          <a href="index.html">Home</a>
+          <a href="notes.html">Notes &amp; Resources</a>
+          <a href="tutors.html">Book a Tutor</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="notes.html?cat=papers">Past Papers</a>
+          <a href="notes.html?cat=lectures">Lecture Notes</a>
+          <a href="notes.html?cat=selftest">Self-Test Questions</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>An independent student-run resource hub for Victoria University Uganda. This platform is not an official university system.</span>
+      <span>Made by students, for students.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

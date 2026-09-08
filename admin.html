@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — VU Notes | Victoria University Uganda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,600&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   VU NOTES — Admin Transaction & Monitoring Dashboard
+   ========================================================= */
+
+:root{
+  --vu-red: #E63946;
+  --vu-red-dark: #C81E2C;
+  --vu-red-glow: rgba(230, 57, 70, 0.35);
+  --vu-blue: #4E8FD1;
+  --vu-blue-dark: #2C5680;
+  --vu-blue-glow: rgba(78, 143, 209, 0.35);
+  --vu-green: #22c55e;
+  --vu-green-glow: rgba(34, 197, 94, 0.35);
+  --vu-yellow: #eab308;
+  --vu-silver: #94A3B8;
+  --vu-silver-light: rgba(255, 255, 255, 0.12);
+  --vu-ink: #F8FAFC;
+  --vu-ink-soft: #CBD5E1;
+  --vu-paper: #090A0F;
+
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.12);
+  --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(230, 57, 70, 0.25);
+
+  --container: 1240px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
+
+body{
+  margin: 0;
+  background-color: #090a0f;
+  background-image: 
+    linear-gradient(180deg, 
+      rgba(9, 10, 15, 0.95) 0%, 
+      rgba(12, 15, 22, 0.85) 50%, 
+      rgba(9, 10, 15, 0.95) 100%
+    ),
+    url('images/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--vu-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+img{ max-width:100%; display:block; }
+a{ color: #60a5fa; text-decoration: none; }
+a:hover{ text-decoration: underline; }
+
+h1,h2,h3,h4{
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 .4em;
+  color: #ffffff;
+}
+
+.container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: #7dd3fc; margin-bottom: 12px; font-weight: 600;
+}
+.eyebrow::before{
+  content:""; width: 18px; height: 4px;
+  background: var(--vu-blue); display:inline-block;
+  border-radius: 2px; box-shadow: 0 0 8px var(--vu-blue-glow);
+}
+
+/* Header & Nav */
+.site-header{
+  position: sticky; top:0; z-index: 50;
+  background: rgba(9, 10, 15, 0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.nav{ display:flex; align-items:center; justify-content:space-between; padding: 14px 0; }
+.brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color: #fff; }
+.brand-word{ font-family: var(--font-display); font-weight: 700; font-size: 19px; }
+.brand-word b{ color: var(--vu-red); font-style:italic; }
+
+.quad-mark{
+  --s: 20px; width: var(--s); height: var(--s);
+  display:inline-grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+  border-radius: 4px; overflow: hidden;
+}
+.quad-mark span:nth-child(1){ background: var(--vu-red); }
+.quad-mark span:nth-child(2){ background: var(--vu-blue); }
+.quad-mark span:nth-child(3){ background: var(--vu-blue); }
+.quad-mark span:nth-child(4){ background: var(--vu-red); }
+
+.nav-links{ display:flex; align-items:center; gap: 6px; list-style:none; margin:0; padding:0; }
+.nav-links a{
+  text-decoration:none; color: var(--vu-ink-soft); font-size: 14px; font-weight: 600;
+  padding: 8px 14px; border-radius: var(--radius-s); transition: all .2s ease;
+}
+.nav-links a:hover{ background: rgba(255,255,255,0.08); color: #ffffff; }
+.nav-links a.active{ color: #ffffff; background: rgba(78, 143, 209, 0.25); border: 1px solid rgba(78, 143, 209, 0.4); }
+.nav-toggle{ display:none; color: #fff; background:none; border:none; }
+
+/* Demo Banner */
+.demo-banner{
+  background: linear-gradient(90deg, rgba(234, 179, 8, 0.18) 0%, rgba(200, 30, 44, 0.18) 100%);
+  border-bottom: 1px solid rgba(234, 179, 8, 0.35);
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fef08a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  backdrop-filter: blur(10px);
+}
+.demo-badge{
+  background: rgba(234, 179, 8, 0.25);
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  padding: 3px 10px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.05em; color: #fff;
+}
+
+/* Page Head */
+.page-head{
+  padding: 36px 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.head-flex{
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap;
+}
+
+/* Commission Setting Widget */
+.commission-box{
+  background: rgba(18, 22, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-m);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 14px;
+  backdrop-filter: blur(12px);
+}
+.commission-box label{ font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; }
+.commission-input-group{ display: flex; align-items: center; gap: 6px; }
+.commission-input-group input{
+  width: 70px; padding: 7px 10px; font-size: 14px; font-weight: 700;
+  border-radius: var(--radius-s); border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0,0,0,0.5); color: #fff; text-align: center;
+  font-family: var(--font-mono);
+}
+.commission-btn{
+  background: var(--vu-blue); color: #fff; border: none; padding: 7px 14px;
+  border-radius: var(--radius-s); font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: background 0.2s ease;
+}
+.commission-btn:hover{ background: #3b82f6; }
+
+/* Notification Bell Button */
+.notif-bell-btn{
+  position: relative; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s ease;
+}
+.notif-bell-btn:hover{ background: rgba(255,255,255,0.16); }
+.notif-count-badge{
+  background: var(--vu-red); color: #fff; font-size: 11px; font-family: var(--font-mono);
+  padding: 2px 7px; border-radius: 999px; font-weight: 800;
+}
+
+/* KPI Cards Grid */
+.kpi-grid{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px; margin: 28px 0 36px;
+}
+.kpi-card{
+  background: rgba(18, 22, 32, 0.78);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-m);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; gap: 8px;
+  position: relative; overflow: hidden;
+}
+.kpi-card::before{
+  content:""; position: absolute; top:0; left:0; width: 4px; height: 100%;
+  background: var(--vu-blue);
+}
+.kpi-card.green::before{ background: var(--vu-green); }
+.kpi-card.yellow::before{ background: var(--vu-yellow); }
+.kpi-card.red::before{ background: var(--vu-red); }
+
+.kpi-label{ font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--vu-silver); font-weight: 600; }
+.kpi-value{ font-family: var(--font-display); font-size: 26px; font-weight: 800; color: #fff; }
+.kpi-sub{ font-size: 12.5px; color: var(--vu-ink-soft); }
+
+/* Section Cards */
+.admin-card{
+  background: rgba(18, 22, 32, 0.78);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-m);
+  padding: 24px;
+  margin-bottom: 36px;
+  box-shadow: var(--shadow-card);
+}
+.admin-card-head{
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+}
+.admin-card-head h2{ font-size: 20px; margin:0; }
+
+/* Filter Controls */
+.table-filters{ display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.table-filters input, .table-filters select{
+  padding: 8px 14px; font-size: 13.5px; border-radius: var(--radius-s);
+  border: 1px solid rgba(255,255,255,0.18); background: rgba(9, 10, 15, 0.7);
+  color: #fff; outline: none;
+}
+.table-filters input:focus, .table-filters select:focus{ border-color: var(--vu-blue); }
+
+/* Data Tables */
+.table-responsive{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.admin-table{
+  width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left;
+}
+.admin-table th{
+  background: rgba(255, 255, 255, 0.04); color: var(--vu-silver);
+  font-family: var(--font-mono); font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.12);
+  white-space: nowrap;
+}
+.admin-table td{
+  padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cbd5e1;
+  vertical-align: middle;
+}
+.admin-table tr:hover td{ background: rgba(255,255,255,0.03); }
+
+/* Badges */
+.status-badge{
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  font-family: var(--font-mono); white-space: nowrap;
+}
+.badge-green{ background: rgba(34, 197, 94, 0.18); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
+.badge-yellow{ background: rgba(234, 179, 8, 0.18); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.35); }
+.badge-red{ background: rgba(230, 57, 70, 0.18); color: #ff7b88; border: 1px solid rgba(230, 57, 70, 0.35); }
+.badge-blue{ background: rgba(78, 143, 209, 0.18); color: #7dd3fc; border: 1px solid rgba(78, 143, 209, 0.35); }
+
+/* Table Action Buttons */
+.tbl-btn{
+  padding: 5px 10px; font-size: 12px; font-weight: 700; border-radius: var(--radius-s);
+  border: 1px solid transparent; cursor: pointer; transition: all 0.15s ease;
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.tbl-btn-success{ background: rgba(34, 197, 94, 0.2); color: #4ade80; border-color: rgba(34, 197, 94, 0.4); }
+.tbl-btn-success:hover{ background: #22c55e; color: #fff; }
+.tbl-btn-warning{ background: rgba(234, 179, 8, 0.2); color: #fde047; border-color: rgba(234, 179, 8, 0.4); }
+.tbl-btn-warning:hover{ background: #eab308; color: #000; }
+.tbl-btn-danger{ background: rgba(230, 57, 70, 0.2); color: #ff7b88; border-color: rgba(230, 57, 70, 0.4); }
+.tbl-btn-danger:hover{ background: #e63946; color: #fff; }
+
+/* Reviews Feed */
+.reviews-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+.review-card{
+  background: rgba(9, 10, 15, 0.6); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-m); padding: 18px; display: flex; flex-direction: column; gap: 10px;
+}
+.review-card.flagged{ border-color: var(--vu-red); background: rgba(200, 30, 44, 0.1); }
+.review-header{ display: flex; justify-content: space-between; align-items: flex-start; }
+.review-stars{ color: #facc15; font-size: 16px; letter-spacing: 2px; }
+
+/* Notifications Modal Drawer */
+.notif-item{
+  padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; flex-direction: column; gap: 4px; font-size: 13px;
+}
+.notif-item.unread{ background: rgba(78, 143, 209, 0.1); border-left: 3px solid var(--vu-blue); }
+.notif-title{ font-weight: 700; color: #fff; display: flex; justify-content: space-between; }
+.notif-time{ font-size: 11px; color: var(--vu-silver); font-family: var(--font-mono); }
+
+@media (max-width: 768px){
+  .head-flex{ flex-direction: column; align-items: flex-start; }
+  .nav-links{
+    position: fixed; top: 62px; left:0; right:0;
+    background: rgba(9, 10, 15, 0.96); backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex-direction: column; align-items:stretch; padding: 20px 24px 28px;
+    gap: 12px;
+    display:none; z-index: 999;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.85);
+  }
+  .nav-links.open{ display:flex; }
+  .nav-links a{
+    padding: 14px 20px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font-size: 16px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+  }
+  .nav-toggle{ display:block; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <nav class="nav container">
+    <a href="index.html" class="brand">
+      <span class="quad-mark"><span></span><span></span><span></span><span></span></span>
+      <span class="brand-word">VU <b>Notes</b></span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="notes.html">Notes &amp; Resources</a></li>
+      <li><a href="tutors.html">Book a Tutor</a></li>
+      <li><a href="admin.html" class="active">Admin Dashboard</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- Governance Banner -->
+<div class="demo-banner">
+  <div>
+    🛡️ <strong>REAL-TIME PLATFORM GOVERNANCE &amp; MONITORING DASHBOARD</strong> &mdash; Managing student resource drives, peer tutor registrations, and verified bookings.
+  </div>
+  <span class="demo-badge">Admin Audit View</span>
+</div>
+
+<!-- Main Body -->
+<main class="container" style="padding-top: 24px; padding-bottom: 60px;">
+
+  <!-- Page Head & Top Toolbar -->
+  <div class="page-head">
+    <div class="head-flex">
+      <div>
+        <p class="eyebrow">Victoria University Uganda &bull; Governance &amp; Administration</p>
+        <h1>Tutor Transaction &amp; Performance Dashboard</h1>
+        <p style="margin-bottom:0; color:#cbd5e1; max-width:64ch;">
+          Monitor live student tutor bookings, verify session payments, track website commissions, and audit tutor ratings &amp; performance.
+        </p>
+      </div>
+
+      <!-- Top Right Controls -->
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <!-- Notification Bell -->
+        <button class="notif-bell-btn" onclick="openModal('notifModal')">
+          <span>🔔 Alerts</span>
+          <span class="notif-count-badge" id="notifBadgeCount">0</span>
+        </button>
+
+        <!-- Commission Config Box -->
+        <div class="commission-box">
+          <label for="commRateInput">Website Commission:</label>
+          <div class="commission-input-group">
+            <input type="number" id="commRateInput" min="0" max="100" value="10">
+            <span style="color:#fff;font-weight:700;">%</span>
+          </div>
+          <button class="commission-btn" id="saveCommBtn">Save Rate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Analytics Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">Total Bookings</div>
+      <div class="kpi-value" id="kpiTotalBookings">0</div>
+      <div class="kpi-sub" id="kpiBookingsSub">0 Completed &bull; 0 Pending</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Confirmed Payments</div>
+      <div class="kpi-value" id="kpiConfirmedPayments">UGX 0</div>
+      <div class="kpi-sub" id="kpiPendingPaymentsSub">UGX 0 Pending verification</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Website Commission Earned</div>
+      <div class="kpi-value" id="kpiCommissionEarned">UGX 0</div>
+      <div class="kpi-sub" id="kpiCommissionRateSub">Based on 10% platform rate</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Tutor Net Earnings</div>
+      <div class="kpi-value" id="kpiTutorEarnings">UGX 0</div>
+      <div class="kpi-sub">Total payable to peer tutors</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Registered Tutors</div>
+      <div class="kpi-value" id="kpiTotalTutors">0</div>
+      <div class="kpi-sub" id="kpiTutorSub">Active peer tutor profiles</div>
+    </div>
+  </div>
+
+  <!-- Bookings & Payment Verification Table -->
+  <div class="admin-card">
+    <div class="admin-card-head">
+      <div>
+        <h2>📋 Booking &amp; Payment Management</h2>
+        <p style="font-size:13px;color:var(--vu-silver);margin:2px 0 0;">Audit bookings, verify student payments, confirm session completions, or resolve disputes.</p>
+      </div>
+      <div class="table-filters">
+        <input type="search" id="bookingSearchInput" placeholder="Search by ID, Tutor, or Student…">
+        <select id="bookingStatusFilter">
+          <option value="ALL">All Statuses</option>
+          <option value="PENDING_PAYMENT">🟡 Payment Pending</option>
+          <option value="PAYMENT_CONFIRMED">🟢 Payment Confirmed</option>
+          <option value="COMPLETED">🎓 Session Completed</option>
+          <option value="DISPUTED">🚩 Disputed / Review Needed</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Tutor Name</th>
+            <th>Student Name</th>
+            <th>Course</th>
+            <th>Date &amp; Time</th>
+            <th>Tutor Fee</th>
+            <th>Payment Status</th>
+            <th>Verification</th>
+            <th>Session Status</th>
+            <th>Website Commission</th>
+            <th>Tutor Net</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="bookingsTableBody">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tutor Performance & Earnings Summary -->
+  <div class="admin-card">
+    <div class="admin-card-head">
+      <div>
+        <h2>🧑🏽‍🏫 Tutor Performance &amp; Revenue Breakdown</h2>
+        <p style="font-size:13px;color:var(--vu-silver);margin:2px 0 0;">Individual tutor activity, completed sessions, generated revenue, and student rating averages.</p>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Tutor Name</th>
+            <th>Faculty / Course</th>
+            <th>Bookings</th>
+            <th>Completed</th>
+            <th>Total Fees Generated</th>
+            <th>Commission Generated</th>
+            <th>Net Tutor Earnings</th>
+            <th>Average Rating</th>
+            <th>Review Count</th>
+          </tr>
+        </thead>
+        <tbody id="tutorPerformanceTableBody">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Student Reviews & Ratings Moderation -->
+  <div class="admin-card">
+    <div class="admin-card-head">
+      <div>
+        <h2>⭐ Student Reviews &amp; Moderation</h2>
+        <p style="font-size:13px;color:var(--vu-silver);margin:2px 0 0;">Student feedback submitted after verified completed sessions. Administrators can inspect, flag, or remove reviews.</p>
+      </div>
+    </div>
+
+    <div class="reviews-grid" id="adminReviewsGrid">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+</main>
+
+<!-- Admin Notifications Drawer Modal -->
+<div class="modal-overlay" id="notifModal">
+  <div class="modal" style="max-width:550px;">
+    <button class="modal-close" onclick="closeModal('notifModal')">✕</button>
+    <h2>🔔 Admin Notifications Feed</h2>
+    <p class="modal-sub">Real-time platform notifications for tutor registrations, student bookings, payments, and reviews.</p>
+
+    <div id="notificationsList" style="max-height:400px; overflow-y:auto; border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-s);">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom" style="display:flex; justify-content:space-between; flex-wrap:wrap; font-size:13px; color:var(--vu-silver); padding:20px 0;">
+      <span>An independent student-run resource hub for Victoria University Uganda. This platform is not an official university system.</span>
+      <span>Live Real-Time Governance Dashboard.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+let bookingsCache = [];
+let tutorsCache = [];
+let reviewsCache = [];
+let notificationsCache = [];
+let adminSettings = { commissionRate: 10 };
+
+/* ---------- Data Render Engine ---------- */
+function renderDashboard() {
+  const commRate = Number(adminSettings.commissionRate || 10);
+  document.getElementById('commRateInput').value = commRate;
+  document.getElementById('kpiCommissionRateSub').textContent = `Based on ${commRate}% platform rate`;
+
+  // Filter Bookings
+  const query = document.getElementById('bookingSearchInput').value.trim().toLowerCase();
+  const filter = document.getElementById('bookingStatusFilter').value;
+
+  let filteredBookings = bookingsCache;
+  if (filter === 'PENDING_PAYMENT') {
+    filteredBookings = filteredBookings.filter(b => b.paymentStatus === 'Payment Pending' || !b.paymentStatus);
+  } else if (filter === 'PAYMENT_CONFIRMED') {
+    filteredBookings = filteredBookings.filter(b => b.paymentStatus === 'Payment Confirmed');
+  } else if (filter === 'COMPLETED') {
+    filteredBookings = filteredBookings.filter(b => b.sessionStatus === 'Session Completed');
+  } else if (filter === 'DISPUTED') {
+    filteredBookings = filteredBookings.filter(b => b.sessionStatus === 'Disputed' || (b.studentSessionConfirmed !== b.tutorSessionConfirmed && (b.studentSessionConfirmed || b.tutorSessionConfirmed)));
+  }
+
+  if (query) {
+    filteredBookings = filteredBookings.filter(b =>
+      (b.id && b.id.toLowerCase().includes(query)) ||
+      (b.tutorName && b.tutorName.toLowerCase().includes(query)) ||
+      (b.studentName && b.studentName.toLowerCase().includes(query)) ||
+      (b.course && b.course.toLowerCase().includes(query))
+    );
+  }
+
+  // Calculate Financials & KPIs
+  const totalBookingsCount = bookingsCache.length;
+  const completedSessionsCount = bookingsCache.filter(b => b.sessionStatus === 'Session Completed').length;
+  const pendingSessionsCount = totalBookingsCount - completedSessionsCount;
+
+  let totalConfirmedPayments = 0;
+  let totalPendingPayments = 0;
+  let totalCommissionEarned = 0;
+  let totalTutorEarnings = 0;
+
+  bookingsCache.forEach(b => {
+    const fee = Number(b.feeAmount || 0);
+    const comm = Math.round((fee * commRate) / 100);
+    const tutorNet = Math.max(0, fee - comm);
+
+    if (b.paymentStatus === 'Payment Confirmed') {
+      totalConfirmedPayments += fee;
+      totalCommissionEarned += comm;
+      totalTutorEarnings += tutorNet;
+    } else {
+      totalPendingPayments += fee;
+    }
+  });
+
+  // Update KPI displays
+  document.getElementById('kpiTotalBookings').textContent = totalBookingsCount;
+  document.getElementById('kpiBookingsSub').textContent = `${completedSessionsCount} Completed · ${pendingSessionsCount} Pending`;
+  document.getElementById('kpiConfirmedPayments').textContent = 'UGX ' + totalConfirmedPayments.toLocaleString();
+  document.getElementById('kpiPendingPaymentsSub').textContent = 'UGX ' + totalPendingPayments.toLocaleString() + ' Pending verification';
+  document.getElementById('kpiCommissionEarned').textContent = 'UGX ' + totalCommissionEarned.toLocaleString();
+  document.getElementById('kpiTutorEarnings').textContent = 'UGX ' + totalTutorEarnings.toLocaleString();
+  document.getElementById('kpiTotalTutors').textContent = tutorsCache.length;
+  document.getElementById('kpiTutorSub').textContent = `${tutorsCache.length} Active peer tutor profiles`;
+
+  // Render Bookings Table
+  const tbody = document.getElementById('bookingsTableBody');
+  tbody.innerHTML = '';
+
+  if (!filteredBookings.length) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--vu-silver);">No bookings match the selected filter or search query.</td></tr>`;
+  } else {
+    filteredBookings.forEach(b => {
+      const fee = Number(b.feeAmount || 0);
+      const comm = Math.round((fee * commRate) / 100);
+      const tutorNet = Math.max(0, fee - comm);
+
+      const tr = document.createElement('tr');
+
+      // Badges
+      let payBadge = `<span class="status-badge badge-yellow">🟡 Payment Pending</span>`;
+      if (b.paymentStatus === 'Payment Confirmed') {
+        payBadge = `<span class="status-badge badge-green">🟢 Payment Confirmed</span>`;
+      } else if (b.paymentStatus === 'Payment Failed') {
+        payBadge = `<span class="status-badge badge-red">🔴 Payment Failed</span>`;
+      }
+
+      let sessionBadge = `<span class="status-badge badge-blue">⏱ ${b.sessionStatus || 'Not Started'}</span>`;
+      if (b.sessionStatus === 'Session Completed') {
+        sessionBadge = `<span class="status-badge badge-green">🟢 Session Completed</span>`;
+      } else if (b.sessionStatus === 'Disputed') {
+        sessionBadge = `<span class="status-badge badge-red">🚩 Disputed</span>`;
+      } else if (b.studentSessionConfirmed || b.tutorSessionConfirmed) {
+        sessionBadge = `<span class="status-badge badge-yellow">🟡 Awaiting Confirmation</span>`;
+      }
+
+      const verifType = b.paymentVerificationType || (b.paymentStatus === 'Payment Confirmed' ? 'Manually Verified' : 'Pending');
+
+      tr.innerHTML = `
+        <td><strong style="color:#fff;font-family:var(--font-mono);">${b.id || 'BK-OLD'}</strong></td>
+        <td><strong>${b.tutorName || 'Tutor'}</strong></td>
+        <td>${b.studentName || 'Student'}<br><span style="font-size:11px;color:var(--vu-silver);">${b.studentEmail || ''}</span></td>
+        <td>${b.course || 'General'}</td>
+        <td>${b.date || ''}<br><span style="font-size:11px;color:var(--vu-silver);">${b.time || ''} (${b.duration || '1 hr'})</span></td>
+        <td><strong>UGX ${fee.toLocaleString()}</strong></td>
+        <td>${payBadge}</td>
+        <td><span style="font-size:11.5px;color:var(--vu-silver);">${verifType}</span></td>
+        <td>${sessionBadge}</td>
+        <td style="color:#4ade80;font-weight:700;">UGX ${comm.toLocaleString()}</td>
+        <td>UGX ${tutorNet.toLocaleString()}</td>
+        <td>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${b.paymentStatus !== 'Payment Confirmed'
+              ? `<button class="tbl-btn tbl-btn-success verify-pay-btn" data-id="${b.id}">✓ Verify Payment</button>`
+              : `<button class="tbl-btn tbl-btn-warning unverify-pay-btn" data-id="${b.id}">↩ Mark Pending</button>`
+            }
+            ${b.sessionStatus !== 'Session Completed'
+              ? `<button class="tbl-btn tbl-btn-success mark-completed-btn" data-id="${b.id}">🎓 Confirm Session</button>`
+              : ''
+            }
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Attach Table Event Handlers
+  document.querySelectorAll('.verify-pay-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const bId = btn.dataset.id;
+      const b = bookingsCache.find(x => x.id === bId);
+      if (!b) return;
+      btn.disabled = true; btn.textContent = 'Verifying…';
+      try {
+        const fee = Number(b.feeAmount || 0);
+        const comm = Math.round((fee * commRate) / 100);
+        const earnings = Math.max(0, fee - comm);
+
+        await STORE.updateBooking(bId, {
+          paymentStatus: 'Payment Confirmed',
+          paymentVerificationType: 'Manually Verified by Admin',
+          transactionRef: 'ADMIN-VERIFIED-' + Math.floor(1000 + Math.random() * 9000),
+          commissionRate: commRate,
+          commissionAmount: comm,
+          tutorEarnings: earnings
+        });
+
+        await STORE.addNotification({
+          type: 'PAYMENT_CONFIRMED',
+          title: '🟢 PAYMENT VERIFIED BY ADMIN',
+          message: `Booking ${bId} payment of UGX ${fee.toLocaleString()} confirmed. Website commission UGX ${comm.toLocaleString()} calculated.`,
+          bookingId: bId
+        });
+
+        showToast(`Payment of UGX ${fee.toLocaleString()} confirmed for booking ${bId}!`);
+      } catch (e) {
+        console.error(e);
+        showToast('Could not verify payment.');
+      }
+    });
+  });
+
+  document.querySelectorAll('.unverify-pay-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const bId = btn.dataset.id;
+      await STORE.updateBooking(bId, {
+        paymentStatus: 'Payment Pending',
+        paymentVerificationType: 'Pending Verification'
+      });
+      showToast(`Booking ${bId} marked as Payment Pending.`);
+    });
+  });
+
+  document.querySelectorAll('.mark-completed-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const bId = btn.dataset.id;
+      await STORE.updateBooking(bId, {
+        sessionStatus: 'Session Completed',
+        studentSessionConfirmed: true,
+        tutorSessionConfirmed: true
+      });
+      showToast(`Session for ${bId} marked as Completed.`);
+    });
+  });
+
+  // Render Tutor Performance Table
+  const perfTbody = document.getElementById('tutorPerformanceTableBody');
+  perfTbody.innerHTML = '';
+
+  if (!tutorsCache.length) {
+    perfTbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--vu-silver);">No tutors registered yet.</td></tr>`;
+  } else {
+    tutorsCache.forEach(t => {
+      const tutorBookings = bookingsCache.filter(b => b.tutorId === t.id || b.tutorName === t.name);
+      const completedCount = tutorBookings.filter(b => b.sessionStatus === 'Session Completed').length;
+      
+      let totalFees = 0;
+      let totalComm = 0;
+      let totalNet = 0;
+
+      tutorBookings.filter(b => b.paymentStatus === 'Payment Confirmed').forEach(b => {
+        const f = Number(b.feeAmount || 0);
+        const c = Math.round((f * commRate) / 100);
+        totalFees += f;
+        totalComm += c;
+        totalNet += (f - c);
+      });
+
+      const tutorReviews = reviewsCache.filter(r => r.tutorId === t.id || r.tutorName === t.name);
+      const avgRating = tutorReviews.length
+        ? (tutorReviews.reduce((sum, r) => sum + Number(r.rating || 5), 0) / tutorReviews.length).toFixed(1)
+        : 'N/A';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${t.name}</strong></td>
+        <td><strong>${t.course || t.subject || 'General'}</strong><br><span style="font-size:11px;color:var(--vu-silver);">${t.faculty || 'Faculty of Science and Technology'}</span></td>
+        <td><strong>${tutorBookings.length}</strong></td>
+        <td><span class="status-badge badge-green">${completedCount}</span></td>
+        <td>UGX ${totalFees.toLocaleString()}</td>
+        <td style="color:#4ade80;font-weight:700;">UGX ${totalComm.toLocaleString()}</td>
+        <td>UGX ${totalNet.toLocaleString()}</td>
+        <td><strong style="color:#facc15;">⭐ ${avgRating}</strong></td>
+        <td>${tutorReviews.length} reviews</td>
+      `;
+      perfTbody.appendChild(tr);
+    });
+  }
+
+  // Render Reviews Grid
+  const reviewsGrid = document.getElementById('adminReviewsGrid');
+  reviewsGrid.innerHTML = '';
+
+  if (!reviewsCache.length) {
+    reviewsGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--vu-silver);border:1px dashed rgba(255,255,255,0.15);border-radius:var(--radius-m);">No student reviews submitted yet. Reviews are posted after completed tutoring sessions.</div>`;
+  } else {
+    reviewsCache.forEach(r => {
+      const card = document.createElement('div');
+      card.className = `review-card ${r.flagged ? 'flagged' : ''}`;
+      
+      const stars = '⭐'.repeat(r.rating || 5);
+
+      card.innerHTML = `
+        <div class="review-header">
+          <div>
+            <strong style="color:#fff;">${r.studentName || 'Student'}</strong>
+            <div style="font-size:12px;color:var(--vu-silver);">For Tutor: <strong>${r.tutorName || 'Tutor'}</strong></div>
+          </div>
+          <div class="review-stars">${stars}</div>
+        </div>
+        <p style="font-size:13.5px;color:#cbd5e1;margin:4px 0;font-style:italic;">"${r.comment || 'No written comment.'}"</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
+          <span style="font-size:11px;color:var(--vu-silver);">${timeAgo(r.createdAt)}</span>
+          <div style="display:flex;gap:6px;">
+            <button class="tbl-btn ${r.flagged ? 'tbl-btn-success' : 'tbl-btn-warning'} flag-rev-btn" data-id="${r.id}" data-flagged="${r.flagged}">
+              ${r.flagged ? '✓ Unflag' : '🚩 Flag'}
+            </button>
+            <button class="tbl-btn tbl-btn-danger del-rev-btn" data-id="${r.id}">🗑 Delete</button>
+          </div>
+        </div>
+      `;
+      reviewsGrid.appendChild(card);
+    });
+
+    reviewsGrid.querySelectorAll('.flag-rev-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const isFlagged = btn.dataset.flagged === 'true';
+        await STORE.flagReview(btn.dataset.id, !isFlagged);
+        showToast(isFlagged ? 'Review unflagged.' : 'Review flagged for moderation.');
+      });
+    });
+
+    reviewsGrid.querySelectorAll('.del-rev-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (confirm('Are you sure you want to delete this student review?')) {
+          await STORE.deleteReview(btn.dataset.id);
+          showToast('Review deleted.');
+        }
+      });
+    });
+  }
+
+  // Render Notifications List
+  const notifList = document.getElementById('notificationsList');
+  const unreadCount = notificationsCache.filter(n => !n.read).length;
+  document.getElementById('notifBadgeCount').textContent = unreadCount;
+
+  notifList.innerHTML = '';
+  if (!notificationsCache.length) {
+    notifList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--vu-silver);">No notifications yet.</div>`;
+  } else {
+    notificationsCache.forEach(n => {
+      const div = document.createElement('div');
+      div.className = `notif-item ${!n.read ? 'unread' : ''}`;
+      div.innerHTML = `
+        <div class="notif-title">
+          <span>${n.title}</span>
+          <span class="notif-time">${timeAgo(n.createdAt)}</span>
+        </div>
+        <div style="color:#cbd5e1;">${n.message}</div>
+      `;
+      notifList.appendChild(div);
+    });
+  }
+}
+
+/* ---------- Event Listeners ---------- */
+document.getElementById('bookingSearchInput').addEventListener('input', renderDashboard);
+document.getElementById('bookingStatusFilter').addEventListener('change', renderDashboard);
+
+document.getElementById('saveCommBtn').addEventListener('click', async () => {
+  const newRate = Math.min(100, Math.max(0, Number(document.getElementById('commRateInput').value || 10)));
+  adminSettings.commissionRate = newRate;
+  await STORE.saveAdminSettings({ commissionRate: newRate });
+  showToast(`Website commission updated to ${newRate}%! All earnings recalculated.`);
+  renderDashboard();
+});
+
+/* ---------- Watchers ---------- */
+function initAdminWatchers() {
+  if (FIREBASE_READY) {
+    seedIfNeeded().then(() => {
+      STORE.watchBookings(list => { bookingsCache = list; renderDashboard(); });
+      STORE.watchTutors(list => { tutorsCache = list; renderDashboard(); });
+      STORE.watchReviews(list => { reviewsCache = list; renderDashboard(); });
+      STORE.watchNotifications(list => { notificationsCache = list; renderDashboard(); });
+      STORE.getAdminSettings().then(s => { adminSettings = s || { commissionRate: 10 }; renderDashboard(); });
+    });
+  } else {
+    STORE.watchBookings(list => { bookingsCache = list; renderDashboard(); });
+    STORE.watchTutors(list => { tutorsCache = list; renderDashboard(); });
+    STORE.watchReviews(list => { reviewsCache = list; renderDashboard(); });
+    STORE.watchNotifications(list => { notificationsCache = list; renderDashboard(); });
+    adminSettings = STORE.getAdminSettings();
+    renderDashboard();
+  }
+}
+
+initAdminWatchers();
+</script>
+</body>
+</html>

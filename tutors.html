@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Tutor — VU Notes | Victoria University Uganda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,600&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   VU NOTES — Premium Dark Aesthetic Design Tokens
+   Victoria University Uganda Shared Student Peer Tutoring
+   ========================================================= */
+
+:root{
+  --vu-red: #E63946;
+  --vu-red-dark: #C81E2C;
+  --vu-red-glow: rgba(230, 57, 70, 0.35);
+  --vu-blue: #4E8FD1;
+  --vu-blue-dark: #2C5680;
+  --vu-blue-glow: rgba(78, 143, 209, 0.35);
+  --vu-silver: #94A3B8;
+  --vu-silver-light: rgba(255, 255, 255, 0.12);
+  --vu-ink: #F8FAFC;
+  --vu-ink-soft: #CBD5E1;
+  --vu-paper: #090A0F;
+  --vu-paper-raised: rgba(18, 22, 32, 0.78);
+
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.12);
+  --shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(230, 57, 70, 0.25);
+
+  --container: 1140px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+  margin: 0;
+  background-color: #090a0f;
+  background-image: 
+    linear-gradient(180deg, 
+      rgba(9, 10, 15, 0.94) 0%, 
+      rgba(12, 15, 22, 0.76) 20%, 
+      rgba(14, 18, 28, 0.65) 50%, 
+      rgba(12, 15, 22, 0.76) 80%, 
+      rgba(9, 10, 15, 0.95) 100%
+    ),
+    url('images/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--vu-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+img{ max-width:100%; display:block; }
+
+a{ color: #60a5fa; text-decoration: none; }
+a:hover{ text-decoration: underline; }
+
+h1,h2,h3,h4{
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 .5em;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
+
+.container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #ff7b88;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+.eyebrow::before{
+  content:"";
+  width: 18px; height: 4px;
+  background: var(--vu-red);
+  display:inline-block;
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--vu-red-glow);
+}
+
+/* Quadrant mark */
+.quad-mark{
+  --s: 20px;
+  width: var(--s); height: var(--s);
+  display:inline-grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink:0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+}
+.quad-mark span:nth-child(1){ background: var(--vu-red); }
+.quad-mark span:nth-child(2){ background: var(--vu-blue); }
+.quad-mark span:nth-child(3){ background: var(--vu-blue); }
+.quad-mark span:nth-child(4){ background: var(--vu-red); }
+
+/* Setup banner */
+.setup-banner{
+  background: rgba(18, 22, 32, 0.95);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  color: #f1f5f9;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+.setup-banner code{
+  background: rgba(255,255,255,0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: #7dd3fc;
+}
+
+/* Header & Navigation */
+.site-header{
+  position: sticky; top:0; z-index: 50;
+  background: rgba(9, 10, 15, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.nav{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 0;
+}
+.brand{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; color: #ffffff;
+}
+.brand-word{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+.brand-word b{ color: var(--vu-red); font-style:italic; }
+
+.nav-links{
+  display:flex; align-items:center; gap: 6px;
+  list-style:none; margin:0; padding:0;
+}
+.nav-links a{
+  text-decoration:none;
+  color: var(--vu-ink-soft);
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-s);
+  transition: all .2s ease;
+}
+.nav-links a:hover{ background: rgba(255,255,255,0.08); color: #ffffff; text-decoration: none; }
+.nav-links a.active{ color: #ffffff; background: rgba(200, 30, 44, 0.3); border: 1px solid rgba(200, 30, 44, 0.5); }
+
+.nav-cta{
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color:#fff !important;
+  background: var(--vu-red) !important;
+  box-shadow: 0 4px 14px var(--vu-red-glow) !important;
+}
+.nav-cta:hover{ background: #d32f2f !important; transform: translateY(-1px); }
+
+.nav-toggle{ display:none; color: #ffffff; }
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14.5px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration:none;
+  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{ background: var(--vu-red); color:#fff; box-shadow: 0 4px 16px var(--vu-red-glow); }
+.btn-primary:hover{ background: #d32f2f; box-shadow: var(--shadow-lift); transform: translateY(-2px); text-decoration: none; }
+
+.btn-secondary{ background: rgba(255,255,255,0.12); color:#fff; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px); }
+.btn-secondary:hover{ background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); transform: translateY(-2px); text-decoration: none; }
+
+.btn-danger{ background: rgba(200, 30, 44, 0.2); color: #ff7b88; border: 1px solid rgba(200, 30, 44, 0.4); }
+.btn-danger:hover{ background: var(--vu-red); color: #fff; border-color: var(--vu-red); text-decoration: none; }
+
+.btn-outline{ background: rgba(255, 255, 255, 0.05); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px); }
+.btn-outline:hover{ background: var(--vu-red); color:#fff; border-color: var(--vu-red); box-shadow: 0 4px 16px var(--vu-red-glow); transform: translateY(-2px); text-decoration: none; }
+
+.btn-ghost{ background: transparent; color: #7dd3fc; padding: 8px 4px; }
+.btn-ghost:hover{ color: #ffffff; text-decoration: underline; }
+
+.btn-block{ width:100%; }
+.btn-small{ padding: 8px 18px; font-size: 13.5px; }
+
+/* Page Head */
+.page-head{
+  padding: 56px 0 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(9, 10, 15, 0.4);
+  backdrop-filter: blur(8px);
+}
+.page-head h1{
+  font-size: clamp(32px, 4.5vw, 48px);
+  text-shadow: 0 2px 14px rgba(0,0,0,0.7);
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+.page-head p{
+  font-size: 17px;
+  max-width: 62ch;
+  color: #cbd5e1;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+}
+
+/* Section */
+.section{ padding: 48px 0; }
+
+/* Filter Bar */
+.filter-bar{
+  display:flex; gap: 14px; flex-wrap:wrap; align-items:center;
+  margin-bottom: 32px;
+  background: rgba(18, 22, 32, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 16px 20px;
+  border-radius: var(--radius-m);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-card);
+}
+.filter-bar select, .filter-bar input[type="search"]{
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  padding: 11px 16px;
+  border-radius: var(--radius-s);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(9, 10, 15, 0.6);
+  color: #ffffff;
+  outline: none;
+}
+.filter-bar select option{ background: #121620; color: #fff; }
+.filter-bar input[type="search"]{ flex:1; min-width: 220px; }
+.filter-bar select:focus, .filter-bar input[type="search"]:focus{ border-color: var(--vu-blue); box-shadow: 0 0 10px rgba(78, 143, 209, 0.3); }
+
+/* Tutor Grid & Glass Cards */
+.tutor-grid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.tutor-card{
+  background: rgba(18, 22, 32, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-m);
+  overflow:hidden;
+  box-shadow: var(--shadow-card);
+  display:flex; flex-direction:column;
+  transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.tutor-card:hover{
+  transform: translateY(-4px);
+  background: rgba(26, 32, 46, 0.88);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.2);
+}
+.tutor-photo{
+  aspect-ratio: 4/3;
+  background: linear-gradient(135deg, rgba(78, 143, 209, 0.4) 0%, rgba(200, 30, 44, 0.4) 100%);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-family: var(--font-display); font-size: 34px; font-weight: 700;
+  position:relative;
+  overflow:hidden;
+}
+.tutor-photo img{ width:100%; height:100%; object-fit:cover; }
+.tutor-subject-tag{
+  position:absolute; top:12px; left:12px;
+  background: rgba(9, 10, 15, 0.85);
+  backdrop-filter: blur(6px);
+  color: #7dd3fc;
+  border: 1px solid rgba(78, 143, 209, 0.35);
+  font-size: 11.5px; font-weight:700;
+  padding: 4px 12px; border-radius: 999px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+}
+.tutor-body{ padding: 20px 22px 22px; display:flex; flex-direction:column; gap: 10px; flex:1; }
+.tutor-body h3{ font-size: 19px; margin-bottom: 0; color: #ffffff; }
+.tutor-meta{ font-size: 13.5px; color: var(--vu-ink-soft); display:flex; flex-direction:column; gap:6px; }
+.tutor-meta span{ display:flex; align-items:center; gap:8px; }
+.tutor-actions{ margin-top: auto; padding-top: 14px; display:flex; gap:8px; flex-wrap: wrap; }
+
+/* Pricing badge on tutor cards */
+.tutor-fee-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: var(--radius-s);
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #4ade80;
+  margin-top: 2px;
+}
+.tutor-fee-badge .fee-icon{ font-size: 15px; }
+.tutor-fee-free{
+  background: rgba(78, 143, 209, 0.1);
+  border-color: rgba(78, 143, 209, 0.3);
+  color: #7dd3fc;
+}
+
+/* Booking fee info box */
+.booking-fee-box{
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: var(--radius-s);
+  padding: 13px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.booking-fee-box .fee-label{ font-size: 11.5px; color: #86efac; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; font-weight: 700; }
+.booking-fee-box .fee-amount{ font-size: 19px; font-weight: 800; color: #4ade80; font-family: var(--font-display); }
+.booking-fee-box .fee-note{ font-size: 11.5px; color: var(--vu-silver); margin-top: 4px; }
+.booking-fee-icon{ font-size: 28px; }
+
+.empty-state{
+  text-align:center; padding: 64px 24px; color: var(--vu-silver);
+  background: rgba(18, 22, 32, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1.5px dashed rgba(255, 255, 255, 0.18); border-radius: var(--radius-m);
+}
+.empty-state h3{ color: #ffffff; font-size: 18px; margin-bottom: 8px; }
+
+/* Modal */
+.modal-overlay{
+  position: fixed; inset:0;
+  background: rgba(5, 7, 10, 0.75);
+  backdrop-filter: blur(8px);
+  display:none; align-items:center; justify-content:center;
+  padding: 20px; z-index: 100;
+}
+.modal-overlay.open{ display:flex; }
+.modal{
+  background: rgba(18, 22, 32, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-l);
+  max-width: 520px; width:100%;
+  padding: 34px;
+  max-height: 90vh; overflow-y:auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+  position: relative;
+  color: #ffffff;
+}
+.modal-close{
+  position:absolute; top:18px; right:18px;
+  background: rgba(255,255,255,0.1); border:none;
+  width:34px; height:34px; border-radius:50%;
+  cursor:pointer; font-size: 16px; color: #ffffff;
+  display:flex; align-items:center; justify-content:center;
+  transition: background 0.2s ease;
+}
+.modal-close:hover{ background: var(--vu-red); }
+.modal h2{ font-size: 24px; margin-bottom: 6px; color: #ffffff; }
+.modal .modal-sub{ font-size: 14.5px; color: var(--vu-ink-soft); margin-bottom: 24px; }
+
+/* Forms */
+.field{ margin-bottom: 18px; }
+.field label{
+  display:block; font-size: 13.5px; font-weight:700; margin-bottom: 8px; color: #f1f5f9;
+}
+.field input, .field select, .field textarea{
+  width:100%;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  padding: 12px 14px;
+  border-radius: var(--radius-s);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(9, 10, 15, 0.6);
+  color: #ffffff;
+}
+.field input:focus, .field select:focus, .field textarea:focus, .field input[type=file]:focus{
+  outline: none;
+  border-color: var(--vu-blue);
+  box-shadow: 0 0 10px rgba(78, 143, 209, 0.4);
+}
+.field select option{ background: #121620; color: #fff; }
+.field textarea{ resize: vertical; min-height: 90px; }
+.field-row{ display:flex; gap:14px; }
+.field-row .field{ flex:1; }
+.form-note{ font-size: 12.5px; color: var(--vu-silver); margin-top: 6px; line-height: 1.4; }
+
+/* Toast */
+.toast{
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(18, 22, 32, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color:#fff;
+  padding: 14px 24px; border-radius: 999px;
+  font-size: 14px; font-weight:600;
+  display:flex; align-items:center; gap:12px;
+  opacity:0; pointer-events:none;
+  transition: opacity .25s ease, transform .25s ease;
+  z-index: 200;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); pointer-events:auto; }
+.toast .dot{ width:9px; height:9px; border-radius:50%; background: var(--vu-red); box-shadow: 0 0 8px var(--vu-red-glow); }
+
+/* Footer */
+.site-footer{
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 44px 0 30px;
+  margin-top: 60px;
+  background: rgba(9, 10, 15, 0.6);
+  backdrop-filter: blur(10px);
+}
+.footer-bottom{
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap: 12px;
+  font-size: 13.5px; color: var(--vu-silver);
+}
+
+/* Mobile Nav & Responsiveness */
+@media (max-width: 900px){
+  .tutor-grid{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px){
+  .nav-links{
+    position: fixed; top: 62px; left:0; right:0;
+    background: rgba(9, 10, 15, 0.96);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex-direction: column; align-items:stretch; padding: 20px 24px 28px;
+    gap: 12px;
+    display:none;
+    z-index: 999;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.85);
+  }
+  .nav-links.open{ display:flex; }
+  .nav-links a{
+    padding: 14px 20px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font-size: 16px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+  }
+  .nav-toggle{
+    display:block; background:none; border:none; cursor:pointer;
+    width: 44px; height:44px; padding: 8px; color: #ffffff;
+  }
+  .tutor-grid{ grid-template-columns: 1fr; }
+  .filter-bar{ flex-direction: column; align-items: stretch; }
+  .filter-bar select, .filter-bar input[type="search"]{ width: 100%; min-height: 46px; }
+  .field-row{ flex-direction:column; gap:0; }
+  .tutor-actions .btn{ flex: 1; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav container">
+    <a href="index.html" class="brand">
+      <span class="quad-mark"><span></span><span></span><span></span><span></span></span>
+      <span class="brand-word">VU <b>Notes</b></span>
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="notes.html">Notes &amp; Resources</a></li>
+      <li><a href="tutors.html" class="active">Book a Tutor</a></li>
+      <li><a href="admin.html">Admin Dashboard</a></li>
+      <li><a href="notes.html#upload" class="nav-cta">Upload Notes</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="page-head">
+  <div class="container">
+    <p class="eyebrow">Peer Tutoring — Victoria University Uganda</p>
+    <h1>Learn From Fellow Students</h1>
+    <p>Find peer tutors for your courses, view their details, and request study sessions live. Want to tutor classmates? Register your profile below — stored live in Cloud Firestore.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:44px;">
+  <div class="container">
+    <div class="filter-bar">
+      <select id="facultyFilter">
+        <option value="all">All Faculties</option>
+        <option value="Faculty of Science and Technology">Faculty of Science and Technology</option>
+        <option value="Faculty of Business and Management">Faculty of Business and Management</option>
+        <option value="Faculty of Humanities and Social Sciences">Faculty of Humanities and Social Sciences</option>
+        <option value="School of Law">School of Law</option>
+        <option value="Faculty of Health Sciences">Faculty of Health Sciences</option>
+        <option value="Institute of Education and Life-Long Learning">Institute of Education and Life-Long Learning</option>
+      </select>
+
+      <select id="courseFilter" disabled>
+        <option value="">Select a faculty first</option>
+      </select>
+      
+      <input type="search" id="tutorSearch" placeholder="Search tutors by name or course…">
+      <button class="btn btn-primary btn-small" id="openMyBookings">📋 My Bookings Workspace</button>
+      <button class="btn btn-secondary btn-small" id="openAddTutor">＋ Add Yourself as a Tutor</button>
+      <a href="admin.html" class="btn btn-outline btn-small">🛡️ Admin Dashboard</a>
+    </div>
+
+    <div class="tutor-grid" id="tutorGrid"></div>
+    
+    <div class="empty-state" id="tutorEmpty" style="display:none;">
+      <h3>No tutors match that search</h3>
+      <p>Try selecting a different course/faculty or clear the search box.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Book session modal -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('bookModal')">✕</button>
+    <h2 id="bookTutorName">Book a Session</h2>
+    <p class="modal-sub" id="bookTutorSubject"></p>
+    <!-- Fee info box (shown when tutor has a fee) -->
+    <div class="booking-fee-box" id="bookingFeeBox" style="display:none;">
+      <span class="booking-fee-icon">💰</span>
+      <div>
+        <div class="fee-label">Tutoring Fee</div>
+        <div class="fee-amount" id="bookingFeeAmount">UGX 0 / 1 Hour</div>
+        <div class="fee-note">This is the tutor's stated fee. Payment is arranged directly with the tutor after the session is confirmed.</div>
+      </div>
+    </div>
+    <form id="bookForm">
+      <div class="field">
+        <label for="studentName">Your Name</label>
+        <input type="text" id="studentName" required placeholder="e.g. Grace Namutebi">
+      </div>
+      <div class="field">
+        <label for="studentEmail">Your Email</label>
+        <input type="email" id="studentEmail" required placeholder="you@student.vu.ac.ug">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="sessionDate">Preferred Date</label>
+          <input type="date" id="sessionDate" required>
+        </div>
+        <div class="field">
+          <label for="sessionTime">Preferred Time</label>
+          <input type="time" id="sessionTime" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="sessionNote">What do you need help with?</label>
+        <textarea id="sessionNote" placeholder="e.g. Need assistance preparing for upcoming CAT exams in Software Engineering"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Confirm Booking Request</button>
+      <p class="form-note">The tutor will receive your session request details directly.</p>
+    </form>
+  </div>
+</div>
+
+<!-- Add tutor modal -->
+<div class="modal-overlay" id="addTutorModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addTutorModal')">✕</button>
+    <h2>Add Yourself as a Peer Tutor</h2>
+    <p class="modal-sub">Your profile will be saved online to Cloud Firestore and visible to all students immediately.</p>
+    <form id="addTutorForm">
+      <div class="field">
+        <label for="tName">Full Name</label>
+        <input type="text" id="tName" required placeholder="e.g. Peter Kato">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="tFaculty">Faculty</label>
+          <select id="tFaculty" required>
+            <option value="">Select Faculty...</option>
+            <option value="Faculty of Science and Technology">Faculty of Science and Technology</option>
+            <option value="Faculty of Business and Management">Faculty of Business and Management</option>
+            <option value="Faculty of Humanities and Social Sciences">Faculty of Humanities and Social Sciences</option>
+            <option value="School of Law">School of Law</option>
+            <option value="Faculty of Health Sciences">Faculty of Health Sciences</option>
+            <option value="Institute of Education and Life-Long Learning">Institute of Education and Life-Long Learning</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tCourse">Course</label>
+          <select id="tCourse" required disabled>
+            <option value="">Select a faculty first</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="tPhone">Phone Number</label>
+          <input type="tel" id="tPhone" required placeholder="+256 7xx xxx xxx">
+        </div>
+        <div class="field">
+          <label for="tEmail">Email Address</label>
+          <input type="email" id="tEmail" required placeholder="you@student.vu.ac.ug">
+        </div>
+      </div>
+      <div class="field">
+        <label for="tAvailability">Availability</label>
+        <input type="text" id="tAvailability" placeholder="e.g. Weekdays 2 PM - 6 PM &amp; Saturdays">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="tFeeAmount">Tutoring Fee (UGX)
+            <span style="font-weight:400;color:var(--vu-silver);">&mdash; optional</span>
+          </label>
+          <input type="number" id="tFeeAmount" min="0" placeholder="e.g. 20000">
+          <p class="form-note">Leave blank if you offer free sessions.</p>
+        </div>
+        <div class="field">
+          <label for="tFeeDuration">Session Duration</label>
+          <select id="tFeeDuration">
+            <option value="30 Minutes">30 Minutes</option>
+            <option value="1 Hour" selected>1 Hour</option>
+            <option value="1.5 Hours">1.5 Hours</option>
+            <option value="2 Hours">2 Hours</option>
+            <option value="Negotiable">Negotiable</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="tPhoto">Profile Photo (Optional)</label>
+        <input type="file" id="tPhoto" accept="image/*">
+        <p class="form-note">Image will be uploaded to Firebase Storage so students can recognize you.</p>
+      </div>
+      <div class="field">
+        <label for="tBio">Tutor Description &amp; Qualifications</label>
+        <textarea id="tBio" placeholder="e.g. Senior Software Engineering student, experienced in web programming and algorithms. Available for individual or group study sessions."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Publish Tutor Profile</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit tutor modal -->
+<div class="modal-overlay" id="editTutorModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editTutorModal')">✕</button>
+    <h2>Edit Tutor Profile</h2>
+    <p class="modal-sub">Update your contact details, bio, or course listing.</p>
+    <form id="editTutorForm">
+      <input type="hidden" id="editTutorId">
+      <input type="hidden" id="editPhotoPath">
+
+      <div class="field">
+        <label for="editTName">Full Name</label>
+        <input type="text" id="editTName" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="editTFaculty">Faculty</label>
+          <select id="editTFaculty" required>
+            <option value="">Select Faculty...</option>
+            <option value="Faculty of Science and Technology">Faculty of Science and Technology</option>
+            <option value="Faculty of Business and Management">Faculty of Business and Management</option>
+            <option value="Faculty of Humanities and Social Sciences">Faculty of Humanities and Social Sciences</option>
+            <option value="School of Law">School of Law</option>
+            <option value="Faculty of Health Sciences">Faculty of Health Sciences</option>
+            <option value="Institute of Education and Life-Long Learning">Institute of Education and Life-Long Learning</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="editTCourse">Course</label>
+          <select id="editTCourse" required disabled>
+            <option value="">Select a faculty first</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="editTPhone">Phone Number</label>
+          <input type="tel" id="editTPhone" required>
+        </div>
+        <div class="field">
+          <label for="editTEmail">Email Address</label>
+          <input type="email" id="editTEmail" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="editTAvailability">Availability</label>
+        <input type="text" id="editTAvailability">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="editTFeeAmount">Tutoring Fee (UGX)
+            <span style="font-weight:400;color:var(--vu-silver);">&mdash; optional</span>
+          </label>
+          <input type="number" id="editTFeeAmount" min="0" placeholder="e.g. 20000">
+          <p class="form-note">Leave blank for free sessions.</p>
+        </div>
+        <div class="field">
+          <label for="editTFeeDuration">Session Duration</label>
+          <select id="editTFeeDuration">
+            <option value="30 Minutes">30 Minutes</option>
+            <option value="1 Hour">1 Hour</option>
+            <option value="1.5 Hours">1.5 Hours</option>
+            <option value="2 Hours">2 Hours</option>
+            <option value="Negotiable">Negotiable</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="editTPhoto">New Profile Photo (Optional)</label>
+        <input type="file" id="editTPhoto" accept="image/*">
+        <p class="form-note">Leave empty to keep your existing profile photo.</p>
+      </div>
+
+      <div class="field">
+        <label for="editTBio">Bio &amp; Qualifications</label>
+        <textarea id="editTBio"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- My Bookings & Sessions Workspace Modal -->
+<div class="modal-overlay" id="myBookingsModal">
+  <div class="modal" style="max-width: 680px;">
+    <button class="modal-close" onclick="closeModal('myBookingsModal')">✕</button>
+    <h2>📋 Tutoring Sessions &amp; Bookings Workspace</h2>
+    <p class="modal-sub">Track your session requests, confirm completed tutoring, and leave ratings for peer tutors.</p>
+
+    <!-- Workspace Tabs -->
+    <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:12px;">
+      <button class="btn btn-primary btn-small" id="tabStudentView">As Student (My Bookings)</button>
+      <button class="btn btn-secondary btn-small" id="tabTutorView">As Tutor (Incoming Requests)</button>
+    </div>
+
+    <!-- Student View List -->
+    <div id="studentBookingsContainer">
+      <div id="studentBookingsList" style="display:flex; flex-direction:column; gap:12px; max-height:450px; overflow-y:auto;"></div>
+    </div>
+
+    <!-- Tutor View List -->
+    <div id="tutorBookingsContainer" style="display:none;">
+      <div id="tutorBookingsList" style="display:flex; flex-direction:column; gap:12px; max-height:450px; overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Review Modal -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal" style="max-width: 480px;">
+    <button class="modal-close" onclick="closeModal('reviewModal')">✕</button>
+    <h2>⭐ Review Your Peer Tutor</h2>
+    <p class="modal-sub" id="reviewModalSub">Rate and write feedback for your completed session.</p>
+
+    <form id="reviewForm">
+      <input type="hidden" id="revBookingId">
+      <input type="hidden" id="revTutorId">
+      <input type="hidden" id="revTutorName">
+
+      <div class="field">
+        <label for="revStudentName">Your Name</label>
+        <input type="text" id="revStudentName" required placeholder="e.g. Grace Namutebi">
+      </div>
+
+      <div class="field">
+        <label for="revRating">Rating (1 to 5 Stars)</label>
+        <select id="revRating" required>
+          <option value="5" selected>⭐⭐⭐⭐⭐ (5/5) — Excellent session</option>
+          <option value="4">⭐⭐⭐⭐ (4/5) — Very Good</option>
+          <option value="3">⭐⭐⭐ (3/5) — Average / Satisfactory</option>
+          <option value="2">⭐⭐ (2/5) — Below expectations</option>
+          <option value="1">⭐ (1/5) — Unsatisfactory</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="revComment">Written Review / Feedback</label>
+        <textarea id="revComment" required placeholder="e.g. The tutor explained data structures clearly and answered all my practice questions."></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Publish Student Review</button>
+    </form>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <span>An independent student-run resource hub for Victoria University Uganda. This platform is not an official university system.</span>
+      <span>Live Shared Database via Firebase Cloud Firestore.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<!-- Application Scripts -->
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+let currentTutorForBooking = null;
+let tutorsCache = [];
+let bookingsCache = [];
+let reviewsCache = [];
+
+function tutorPhotoMarkup(t) {
+  if (t.photoURL) {
+    return `<img src="${t.photoURL}" alt="${t.name}">`;
+  }
+  return `<span>${initials(t.name)}</span>`;
+}
+
+/* ---------- Faculty -> Course Dependent Dropdown Init ---------- */
+function initFacultyCourseDropdowns() {
+  const facFilter = document.getElementById('facultyFilter');
+  const crsFilter = document.getElementById('courseFilter');
+  const tFac = document.getElementById('tFaculty');
+  const tCrs = document.getElementById('tCourse');
+  const editFac = document.getElementById('editTFaculty');
+  const editCrs = document.getElementById('editTCourse');
+
+  // Filter Bar
+  if (facFilter && crsFilter) {
+    facFilter.addEventListener('change', () => {
+      populateCourseDropdown(facFilter, crsFilter, { allowAllWhenNoFaculty: true, allLabel: 'All Courses' });
+      renderTutors();
+    });
+    // Initial call
+    populateCourseDropdown(facFilter, crsFilter, { allowAllWhenNoFaculty: true, allLabel: 'All Courses' });
+  }
+
+  // Add Tutor Form
+  if (tFac && tCrs) {
+    tFac.addEventListener('change', () => {
+      populateCourseDropdown(tFac, tCrs, { placeholderText: 'Select Course...' });
+    });
+  }
+
+  // Edit Tutor Form
+  if (editFac && editCrs) {
+    editFac.addEventListener('change', () => {
+      populateCourseDropdown(editFac, editCrs, { placeholderText: 'Select Course...' });
+    });
+  }
+}
+
+function renderTutors() {
+  const grid = document.getElementById('tutorGrid');
+  const empty = document.getElementById('tutorEmpty');
+  const facultyFilter = document.getElementById('facultyFilter').value;
+  const courseFilter = document.getElementById('courseFilter').value;
+  const query = document.getElementById('tutorSearch').value.trim().toLowerCase();
+
+  let tutors = tutorsCache;
+
+  if (facultyFilter && facultyFilter !== 'all' && facultyFilter !== 'All Faculties') {
+    tutors = tutors.filter(t => !t.faculty || t.faculty === 'General' || t.faculty === facultyFilter);
+  }
+  if (courseFilter && courseFilter !== 'all' && courseFilter !== '') {
+    tutors = tutors.filter(t => t.course === courseFilter || t.subject === courseFilter);
+  }
+  if (query) {
+    tutors = tutors.filter(t =>
+      (t.name && t.name.toLowerCase().includes(query)) ||
+      (t.course && t.course.toLowerCase().includes(query)) ||
+      (t.subject && t.subject.toLowerCase().includes(query)) ||
+      (t.bio && t.bio.toLowerCase().includes(query))
+    );
+  }
+
+  grid.innerHTML = '';
+
+  if (!tutorsCache.length) {
+    empty.querySelector('h3').textContent = 'No tutors registered yet';
+    empty.querySelector('p').textContent = 'Be the first to register as a peer tutor! Click "+ Add Yourself as a Tutor" above to publish your profile.';
+    empty.style.display = 'block';
+  } else if (!tutors.length) {
+    empty.querySelector('h3').textContent = 'No tutors match that filter or search';
+    empty.querySelector('p').textContent = 'Try selecting a different course/faculty or clear the search box.';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+  }
+
+  const currentUid = getCurrentUserId();
+
+  tutors.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'tutor-card';
+
+    const isOwner = t.ownerId === currentUid || !FIREBASE_READY;
+    const tutorCourseName = t.course || t.subject || 'General Course';
+
+    // Pricing badge
+    let feeBadge = '';
+    if (t.feeAmount && Number(t.feeAmount) > 0) {
+      const feeFormatted = Number(t.feeAmount).toLocaleString();
+      feeBadge = `<div class="tutor-fee-badge"><span class="fee-icon">💰</span> UGX ${feeFormatted} / ${t.feeDuration || '1 Hour'}</div>`;
+    } else {
+      feeBadge = `<div class="tutor-fee-badge tutor-fee-free"><span class="fee-icon">🎓</span> Free Sessions</div>`;
+    }
+
+    // Ratings calculation
+    const tutorRevs = reviewsCache.filter(r => r.tutorId === t.id || r.tutorName === t.name);
+    const avgRating = tutorRevs.length
+      ? (tutorRevs.reduce((sum, r) => sum + Number(r.rating || 5), 0) / tutorRevs.length).toFixed(1)
+      : null;
+
+    let ratingDisplay = avgRating
+      ? `<div style="font-size:13px;color:#facc15;font-weight:700;margin-top:2px;">⭐ ${avgRating} / 5.0 (${tutorRevs.length} review${tutorRevs.length > 1 ? 's' : ''})</div>`
+      : `<div style="font-size:12.5px;color:var(--vu-silver);margin-top:2px;">⭐ New Tutor (No reviews yet)</div>`;
+
+    card.innerHTML = `
+      <div class="tutor-photo">
+        <span class="tutor-subject-tag">${tutorCourseName}</span>
+        ${tutorPhotoMarkup(t)}
+      </div>
+      <div class="tutor-body">
+        <h3>${t.name}</h3>
+        ${feeBadge}
+        ${ratingDisplay}
+        <p style="font-size:13.5px;margin-bottom:4px;color:#cbd5e1;">${t.bio || 'Peer Tutor at Victoria University Uganda.'}</p>
+        <div class="tutor-meta">
+          <span>🏫 ${t.faculty || 'Victoria University Uganda'}</span>
+          <span>📚 ${tutorCourseName}</span>
+          <span>📞 ${t.phone}</span>
+          <span>✉️ ${t.email}</span>
+          ${t.availability ? `<span>🕒 ${t.availability}</span>` : ''}
+        </div>
+        <div class="tutor-actions">
+          <button class="btn btn-primary btn-small book-btn" data-id="${t.id}">📅 Book a Session</button>
+          ${isOwner ? `
+            <button class="btn btn-secondary btn-small edit-tutor-btn" data-id="${t.id}">✏️ Edit</button>
+            <button class="btn btn-danger btn-small remove-tutor-btn" data-id="${t.id}" data-path="${t.storagePath || ''}" data-owner="${t.ownerId || ''}">🗑 Remove</button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Attach Booking buttons
+  grid.querySelectorAll('.book-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = tutorsCache.find(x => x.id === btn.dataset.id);
+      if (!t) return;
+      currentTutorForBooking = t;
+      document.getElementById('bookTutorName').textContent = 'Book Session with ' + t.name;
+      document.getElementById('bookTutorSubject').textContent = (t.course || t.subject || 'General') + ' · ' + (t.faculty || 'Victoria University Uganda');
+
+      const feeBox = document.getElementById('bookingFeeBox');
+      const feeAmountEl = document.getElementById('bookingFeeAmount');
+      if (t.feeAmount && Number(t.feeAmount) > 0) {
+        feeAmountEl.textContent = 'UGX ' + Number(t.feeAmount).toLocaleString() + ' / ' + (t.feeDuration || '1 Hour');
+        feeBox.style.display = 'flex';
+      } else {
+        feeBox.style.display = 'none';
+      }
+
+      openModal('bookModal');
+    });
+  });
+
+  // Attach Edit buttons
+  grid.querySelectorAll('.edit-tutor-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = tutorsCache.find(x => x.id === btn.dataset.id);
+      if (!t) return;
+      document.getElementById('editTutorId').value = t.id;
+      document.getElementById('editPhotoPath').value = t.storagePath || '';
+      document.getElementById('editTName').value = t.name || '';
+      
+      const editFac = document.getElementById('editTFaculty');
+      const editCrs = document.getElementById('editTCourse');
+      editFac.value = t.faculty || '';
+      populateCourseDropdown(editFac, editCrs, { placeholderText: 'Select Course...' });
+      editCrs.value = t.course || t.subject || '';
+
+      document.getElementById('editTPhone').value = t.phone || '';
+      document.getElementById('editTEmail').value = t.email || '';
+      document.getElementById('editTAvailability').value = t.availability || '';
+      document.getElementById('editTFeeAmount').value = t.feeAmount || '';
+      document.getElementById('editTFeeDuration').value = t.feeDuration || '1 Hour';
+      document.getElementById('editTBio').value = t.bio || '';
+      openModal('editTutorModal');
+    });
+  });
+
+  // Attach Remove buttons
+  grid.querySelectorAll('.remove-tutor-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const tId = btn.dataset.id;
+      const path = btn.dataset.path;
+      const owner = btn.dataset.owner;
+
+      if (confirm("Are you sure you want to remove your tutor profile?")) {
+        btn.disabled = true;
+        btn.textContent = 'Removing…';
+        try {
+          await STORE.deleteTutor(tId, path, owner);
+          showToast('Your tutor profile has been removed.');
+        } catch (err) {
+          console.error(err);
+          showToast('Could not remove profile.');
+          btn.disabled = false;
+          btn.textContent = 'Remove';
+        }
+      }
+    });
+  });
+}
+
+/* ---------- Workspace Render Logic ---------- */
+function renderWorkspace() {
+  const studentList = document.getElementById('studentBookingsList');
+  const tutorList = document.getElementById('tutorBookingsList');
+
+  // 1. Render Student View
+  studentList.innerHTML = '';
+  if (!bookingsCache.length) {
+    studentList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--vu-silver);">No booking requests submitted yet.</div>`;
+  } else {
+    bookingsCache.forEach(b => {
+      const item = document.createElement('div');
+      item.style.cssText = 'background:rgba(9,10,15,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-s);padding:14px;display:flex;flex-direction:column;gap:8px;';
+      
+      const feeLabel = b.feeAmount ? `UGX ${Number(b.feeAmount).toLocaleString()}` : 'Free';
+      const isCompleted = b.sessionStatus === 'Session Completed';
+
+      item.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:#fff;">Booking #${b.id} &bull; Tutor: ${b.tutorName}</strong>
+          <span style="font-size:12px;font-family:var(--font-mono);color:#7dd3fc;">${b.date} ${b.time}</span>
+        </div>
+        <div style="font-size:13px;color:#cbd5e1;">Course: <strong>${b.course || 'General'}</strong> &bull; Fee: <strong>${feeLabel}</strong></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;">
+          <span>Request: <strong style="color:#fde047;">${b.bookingStatus || 'Pending'}</strong></span> &bull; 
+          <span>Payment: <strong style="color:#4ade80;">${b.paymentStatus || 'Pending'}</strong></span> &bull; 
+          <span>Session: <strong style="color:${isCompleted?'#4ade80':'#7dd3fc'}">${b.sessionStatus || 'Not Started'}</strong></span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+          ${!b.studentSessionConfirmed && !isCompleted
+            ? `<button class="btn btn-primary btn-small student-confirm-btn" data-id="${b.id}">✓ Mark Session Completed</button>`
+            : `<span style="font-size:12px;color:#4ade80;font-weight:700;">✓ You confirmed this session</span>`
+          }
+          ${isCompleted && !b.reviewSubmitted
+            ? `<button class="btn btn-secondary btn-small open-review-btn" data-id="${b.id}" data-tutorid="${b.tutorId}" data-tutorname="${b.tutorName}">⭐ Leave Review</button>`
+            : ''
+          }
+          ${isCompleted && b.reviewSubmitted
+            ? `<span style="font-size:12px;color:#facc15;font-weight:700;">⭐ Review Submitted</span>`
+            : ''
+          }
+        </div>
+      `;
+      studentList.appendChild(item);
+    });
+
+    studentList.querySelectorAll('.student-confirm-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const bId = btn.dataset.id;
+        const b = bookingsCache.find(x => x.id === bId);
+        if (!b) return;
+
+        const tutorConf = b.tutorSessionConfirmed || false;
+        const newSessionStatus = tutorConf ? 'Session Completed' : 'Awaiting Confirmation';
+
+        await STORE.updateBooking(bId, {
+          studentSessionConfirmed: true,
+          sessionStatus: newSessionStatus
+        });
+
+        if (newSessionStatus === 'Session Completed') {
+          showToast('🟢 Session marked as Completed! You can now leave a tutor review.');
+        } else {
+          showToast('🟡 Your session confirmation was recorded. Awaiting tutor confirmation.');
+        }
+      });
+    });
+
+    studentList.querySelectorAll('.open-review-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('revBookingId').value = btn.dataset.id;
+        document.getElementById('revTutorId').value = btn.dataset.tutorid;
+        document.getElementById('revTutorName').value = btn.dataset.tutorname;
+        document.getElementById('reviewModalSub').textContent = `Writing feedback for ${btn.dataset.tutorname}`;
+        openModal('reviewModal');
+      });
+    });
+  }
+
+  // 2. Render Tutor View
+  tutorList.innerHTML = '';
+  if (!bookingsCache.length) {
+    tutorList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--vu-silver);">No incoming booking requests yet.</div>`;
+  } else {
+    bookingsCache.forEach(b => {
+      const item = document.createElement('div');
+      item.style.cssText = 'background:rgba(9,10,15,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-s);padding:14px;display:flex;flex-direction:column;gap:8px;';
+
+      const isCompleted = b.sessionStatus === 'Session Completed';
+
+      item.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:#fff;">Booking #${b.id} &bull; Student: ${b.studentName}</strong>
+          <span style="font-size:12px;font-family:var(--font-mono);color:#7dd3fc;">${b.date} ${b.time}</span>
+        </div>
+        <div style="font-size:13px;color:#cbd5e1;">Course: <strong>${b.course || 'General'}</strong> &bull; Stated Fee: <strong>UGX ${Number(b.feeAmount||0).toLocaleString()}</strong></div>
+        <div style="font-size:12.5px;color:var(--vu-silver);">Note: "${b.note || 'No special note.'}"</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;margin-top:4px;">
+          <span>Request: <strong style="color:#fde047;">${b.bookingStatus || 'Pending'}</strong></span> &bull; 
+          <span>Session: <strong style="color:${isCompleted?'#4ade80':'#7dd3fc'}">${b.sessionStatus || 'Not Started'}</strong></span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+          ${b.bookingStatus === 'Pending'
+            ? `<button class="btn btn-primary btn-small tutor-accept-btn" data-id="${b.id}">✓ Accept Request</button>
+               <button class="btn btn-danger btn-small tutor-decline-btn" data-id="${b.id}">✕ Decline</button>`
+            : `<span style="font-size:12px;color:#4ade80;font-weight:700;">✓ Request ${b.bookingStatus}</span>`
+          }
+          ${!b.tutorSessionConfirmed && !isCompleted && b.bookingStatus === 'Accepted'
+            ? `<button class="btn btn-secondary btn-small tutor-confirm-btn" data-id="${b.id}">🎓 Confirm Session Completed</button>`
+            : ''
+          }
+        </div>
+      `;
+      tutorList.appendChild(item);
+    });
+
+    tutorList.querySelectorAll('.tutor-accept-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await STORE.updateBooking(btn.dataset.id, { bookingStatus: 'Accepted' });
+        showToast('Accepted student booking request!');
+      });
+    });
+
+    tutorList.querySelectorAll('.tutor-decline-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await STORE.updateBooking(btn.dataset.id, { bookingStatus: 'Declined' });
+        showToast('Declined booking request.');
+      });
+    });
+
+    tutorList.querySelectorAll('.tutor-confirm-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const bId = btn.dataset.id;
+        const b = bookingsCache.find(x => x.id === bId);
+        if (!b) return;
+
+        const studConf = b.studentSessionConfirmed || false;
+        const newSessionStatus = studConf ? 'Session Completed' : 'Awaiting Confirmation';
+
+        await STORE.updateBooking(bId, {
+          tutorSessionConfirmed: true,
+          sessionStatus: newSessionStatus
+        });
+
+        if (newSessionStatus === 'Session Completed') {
+          showToast('🟢 Session marked as Completed!');
+        } else {
+          showToast('🟡 Your session confirmation was recorded. Awaiting student confirmation.');
+        }
+      });
+    });
+  }
+}
+
+/* ---------- Workspace Modal Tabs ---------- */
+document.getElementById('openMyBookings').addEventListener('click', () => {
+  renderWorkspace();
+  openModal('myBookingsModal');
+});
+
+document.getElementById('tabStudentView').addEventListener('click', () => {
+  document.getElementById('studentBookingsContainer').style.display = 'block';
+  document.getElementById('tutorBookingsContainer').style.display = 'none';
+  document.getElementById('tabStudentView').className = 'btn btn-primary btn-small';
+  document.getElementById('tabTutorView').className = 'btn btn-secondary btn-small';
+});
+
+document.getElementById('tabTutorView').addEventListener('click', () => {
+  document.getElementById('studentBookingsContainer').style.display = 'none';
+  document.getElementById('tutorBookingsContainer').style.display = 'block';
+  document.getElementById('tabTutorView').className = 'btn btn-primary btn-small';
+  document.getElementById('tabStudentView').className = 'btn btn-secondary btn-small';
+});
+
+/* ---------- Event Listeners ---------- */
+document.getElementById('tutorSearch').addEventListener('input', renderTutors);
+document.getElementById('openAddTutor').addEventListener('click', () => {
+  const tFac = document.getElementById('tFaculty');
+  const tCrs = document.getElementById('tCourse');
+  tFac.value = '';
+  populateCourseDropdown(tFac, tCrs, { placeholderText: 'Select Course...' });
+  openModal('addTutorModal');
+});
+
+/* ---------- Book Session Submission ---------- */
+document.getElementById('bookForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type=submit]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Sending request…';
+
+  const booking = {
+    tutorId: currentTutorForBooking.id,
+    tutorName: currentTutorForBooking.name,
+    course: currentTutorForBooking.course || currentTutorForBooking.subject || 'General',
+    feeAmount: currentTutorForBooking.feeAmount || 0,
+    duration: currentTutorForBooking.feeDuration || '1 Hour',
+    studentName: document.getElementById('studentName').value,
+    studentEmail: document.getElementById('studentEmail').value,
+    date: document.getElementById('sessionDate').value,
+    time: document.getElementById('sessionTime').value,
+    note: document.getElementById('sessionNote').value
+  };
+
+  try {
+    const bookingId = await STORE.addBooking(booking);
+    closeModal('bookModal');
+    e.target.reset();
+    showToast(`🟢 Session request #${bookingId || ''} sent to ${booking.tutorName}! Status: Pending`);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not send booking: ' + (err.message || 'Check your connection.'));
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'Confirm Booking Request';
+  }
+});
+
+/* ---------- Review Submission Form ---------- */
+document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type=submit]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Publishing review…';
+
+  const reviewData = {
+    bookingId: document.getElementById('revBookingId').value,
+    tutorId: document.getElementById('revTutorId').value,
+    tutorName: document.getElementById('revTutorName').value,
+    studentName: document.getElementById('revStudentName').value,
+    rating: Number(document.getElementById('revRating').value || 5),
+    comment: document.getElementById('revComment').value
+  };
+
+  try {
+    await STORE.addReview(reviewData);
+    closeModal('reviewModal');
+    e.target.reset();
+    showToast(`⭐ Review published for ${reviewData.tutorName}!`);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not publish review: ' + (err.message || 'Check your connection.'));
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'Publish Student Review';
+  }
+});
+
+/* ---------- Add Tutor Profile Submission ---------- */
+document.getElementById('addTutorForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type=submit]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Publishing profile…';
+  
+  const photoFile = document.getElementById('tPhoto').files[0];
+  const selectedFaculty = document.getElementById('tFaculty').value;
+  const selectedCourse = document.getElementById('tCourse').value;
+
+  if (!selectedFaculty || !selectedCourse) {
+    showToast('Please select both a Faculty and a Course.');
+    submitBtn.disabled = false; submitBtn.textContent = 'Publish Tutor Profile';
+    return;
+  }
+
+  const tutorData = {
+    name: document.getElementById('tName').value,
+    faculty: selectedFaculty,
+    course: selectedCourse,
+    subject: selectedCourse,
+    phone: document.getElementById('tPhone').value,
+    email: document.getElementById('tEmail').value,
+    availability: document.getElementById('tAvailability').value,
+    feeAmount: document.getElementById('tFeeAmount').value,
+    feeDuration: document.getElementById('tFeeDuration').value,
+    bio: document.getElementById('tBio').value
+  };
+
+  try {
+    await STORE.addTutor(tutorData, photoFile);
+    closeModal('addTutorModal');
+    e.target.reset();
+    showToast('🟢 Tutor registration successful! Your profile is live.');
+  } catch (err) {
+    console.error("Add tutor error:", err);
+    showToast('Could not add tutor profile: ' + (err.message || 'Check your connection.'));
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'Publish Tutor Profile';
+  }
+});
+
+/* ---------- Edit Tutor Profile Submission ---------- */
+document.getElementById('editTutorForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type=submit]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Updating profile…';
+
+  const tId = document.getElementById('editTutorId').value;
+  const currentPhotoPath = document.getElementById('editPhotoPath').value;
+  const photoFile = document.getElementById('editTPhoto').files[0];
+
+  const selectedFaculty = document.getElementById('editTFaculty').value;
+  const selectedCourse = document.getElementById('editTCourse').value;
+
+  const tutorData = {
+    name: document.getElementById('editTName').value,
+    faculty: selectedFaculty,
+    course: selectedCourse,
+    subject: selectedCourse,
+    phone: document.getElementById('editTPhone').value,
+    email: document.getElementById('editTEmail').value,
+    availability: document.getElementById('editTAvailability').value,
+    feeAmount: document.getElementById('editTFeeAmount').value,
+    feeDuration: document.getElementById('editTFeeDuration').value,
+    bio: document.getElementById('editTBio').value
+  };
+
+  try {
+    await STORE.updateTutor(tId, tutorData, photoFile, currentPhotoPath);
+    closeModal('editTutorModal');
+    e.target.reset();
+    showToast('Your tutor profile has been updated!');
+  } catch (err) {
+    console.error("Edit tutor error:", err);
+    showToast('Could not update profile: ' + (err.message || 'Check your connection.'));
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'Save Changes';
+  }
+});
+
+/* ---------- Watch Tutors & Bookings from Store ---------- */
+function initTutorWatchers() {
+  initFacultyCourseDropdowns();
+
+  if (FIREBASE_READY) {
+    seedIfNeeded().then(() => {
+      STORE.watchTutors(list => { tutorsCache = list; renderTutors(); });
+      STORE.watchBookings(list => { bookingsCache = list; renderWorkspace(); });
+      STORE.watchReviews(list => { reviewsCache = list; renderTutors(); });
+    });
+  } else {
+    STORE.watchTutors(list => { tutorsCache = list; renderTutors(); });
+    STORE.watchBookings(list => { bookingsCache = list; renderWorkspace(); });
+    STORE.watchReviews(list => { reviewsCache = list; renderTutors(); });
+  }
+}
+
+initTutorWatchers();
+</script>
+</body>
+</html>= list;
+      refreshSubjectFilter();
+      renderTutors();
+    });
+  }
+}
+
+initTutorWatchers();
+</script>
+</body>
+</html>

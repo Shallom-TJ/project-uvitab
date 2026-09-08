@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Academic resources folder (Notes, papers, PDFs)
+    match /resources/{allPaths=**} {
+      allow read: if true;
+      // Restrict uploads to authenticated users and max 55MB file size
+      allow write: if request.auth != null && request.resource.size < 55 * 1024 * 1024;
+      allow delete: if request.auth != null;
+    }
+
+    // Tutor profile photos
+    match /tutor-photos/{allPaths=**} {
+      allow read: if true;
+      // Restrict photo uploads to max 10MB
+      allow write: if request.auth != null && request.resource.size < 10 * 1024 * 1024;
+      allow delete: if request.auth != null;
+    }
+  }
+}
