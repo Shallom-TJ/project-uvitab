@@ -1,49 +1,172 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if the user is authenticated (including Firebase Anonymous auth)
+
+    // ── Cryptographic Custom Claims Verification ───────────────────
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Helper function to check ownership matching the document's ownerId
-    function isOwner(resourceData) {
-      return isAuthenticated() && (request.auth.uid == resourceData.ownerId);
+    // STRICT: Admin check verified SOLELY via cryptographically signed Firebase Custom Claims.
+    // A Firestore /roles document by itself NEVER grants administrative privileges.
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.token.superAdmin == true
+      );
     }
 
-    // Resources collection (Lecture notes, past papers, summaries, self-tests)
+    // STRICT: Super Admin check verified SOLELY via custom claims triad.
+    // Must satisfy: admin == true, superAdmin == true, and role == 'superadmin'.
+    function isSuperAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.admin == true &&
+             request.auth.token.superAdmin == true &&
+             request.auth.token.role == 'superadmin';
+    }
+
+    function isOwner(ownerId) {
+      return isAuthenticated() && request.auth.uid == ownerId;
+    }
+
+    // ── Roles collection (Audit Log Only) ──────────────────────────
+    // Protected against ALL client-side writes. Only privileged Firebase Admin SDK
+    // (server/bootstrap script) can write or modify role audit records.
+    match /roles/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow write: if false; // BLOCKED for all client writes
+    }
+
+    // ── Academic Resources collection ──────────────────────────────
     match /resources/{resourceId} {
-      allow read: if true;
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isOwner(resource.data);
+      // Public visitors can read ONLY approved resources.
+      // Owners can view their own pending/approved resources; Admins view all.
+      allow read: if resource.data.status == 'Approved' ||
+                     (isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin()));
+
+      // Normal users MUST create resources with status 'Pending'.
+      // Only verified Admins may create directly with 'Approved'.
+      allow create: if isAuthenticated() &&
+                       request.resource.data.ownerId == request.auth.uid &&
+                       (
+                         request.resource.data.status == 'Pending' ||
+                         (isAdmin() && request.resource.data.status in ['Approved', 'Pending', 'Rejected'])
+                       );
+
+      // Normal users CANNOT approve their own resources, cannot modify another user's resources,
+      // and cannot change ownership or status.
+      allow update: if isAuthenticated() && (
+        (
+          resource.data.ownerId == request.auth.uid &&
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'ownerId']) || isAdmin())
+        ) ||
+        isAdmin()
+      );
+
+      // Only the verified owner or an Admin can delete.
+      allow delete: if isAuthenticated() &&
+                       (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
-    // Tutors collection
+    // ── Tutors collection ──────────────────────────────────────────
     match /tutors/{tutorId} {
       allow read: if true;
       allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isOwner(resource.data);
+      allow update: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
-    // Courses collection
+    // ── Courses collection ─────────────────────────────────────────
     match /courses/{courseId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
+      // STRICT: Normal users CANNOT manage courses. Managed strictly by Admins.
+      allow create, update, delete: if isAdmin();
     }
 
-    // Tutor bookings collection
+    // ── Bookings collection ────────────────────────────────────────
+    // Field-level restrictions enforce that normal students/tutors cannot
+    // forge payment status, commission rates/amounts, tutor earnings,
+    // verification timestamps/signers, or tamper with ownership.
+    // Payment verification remains strictly an Admin/Server operation.
     match /bookings/{bookingId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
+      allow read: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.tutorId == request.auth.uid ||
+        isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+                       request.resource.data.ownerId == request.auth.uid &&
+                       request.resource.data.bookingStatus == 'Pending' &&
+                       request.resource.data.paymentStatus == 'Payment Pending' &&
+                       (
+                         !('paymentVerificationType' in request.resource.data) ||
+                         request.resource.data.paymentVerificationType == 'Pending Verification'
+                       ) &&
+                       !request.resource.data.keys().hasAny(['paymentVerifiedBy', 'paymentVerifiedAt']);
+
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (
+          (resource.data.ownerId == request.auth.uid || resource.data.tutorId == request.auth.uid) &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'paymentStatus',
+            'paymentVerificationType',
+            'transactionRef',
+            'paymentVerifiedBy',
+            'paymentVerifiedAt',
+            'commissionRate',
+            'commissionAmount',
+            'tutorEarnings',
+            'ownerId',
+            'tutorId',
+            'createdAt'
+          ])
+        )
+      );
+
+      allow delete: if isAdmin();
     }
 
-    // Meta collection (seeding status)
+    // ── Reviews collection ─────────────────────────────────────────
+    match /reviews/{reviewId} {
+      allow read: if true;
+      // Reviewer ID must match authenticated user to prevent impersonation
+      allow create: if isAuthenticated() && request.resource.data.reviewerId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        (resource.data.reviewerId == request.auth.uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['flagged'])) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.reviewerId == request.auth.uid);
+    }
+
+    // ── Notifications collection ───────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAdmin();
+      // Normal users CANNOT create arbitrary system notifications; only legitimate system events
+      allow create: if isAuthenticated() && (
+        isAdmin() ||
+        (
+          request.resource.data.type in ['BOOKING_CREATED', 'NEW_BOOKING', 'TUTOR_REGISTERED', 'PAYMENT_PENDING', 'REVIEW_SUBMITTED'] &&
+          request.resource.data.title != null &&
+          request.resource.data.message != null
+        )
+      );
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Admin settings collection ──────────────────────────────────
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Metadata / Seeding tracker ─────────────────────────────────
     match /meta/{docId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      // STRICT: Protected against client tampering. Only verified Admins can write metadata.
+      allow write: if isAdmin();
     }
   }
 }

@@ -643,16 +643,18 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
 @media (max-width: 640px){
   .nav-links{
     position: fixed; top: 62px; left:0; right:0;
-    background: rgba(9, 10, 15, 0.96);
-    backdrop-filter: blur(20px);
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     flex-direction: column; align-items:stretch; padding: 20px 24px 28px;
     gap: 12px;
     display:none;
     z-index: 999;
-    box-shadow: 0 16px 32px rgba(0,0,0,0.85);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.9);
   }
   .nav-links.open{ display:flex; }
+  .nav-links li{ width: 100%; list-style: none; }
   .nav-links a{
     padding: 14px 20px;
     min-height: 48px;
@@ -660,17 +662,110 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
     align-items: center;
     width: 100%;
     font-size: 16px;
+    font-weight: 600;
     margin-bottom: 4px;
-    border-radius: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8fafc;
+    transition: all 0.2s ease;
+  }
+  .nav-links a:hover, .nav-links a.active{
+    background: rgba(230, 57, 70, 0.2);
+    color: #ffffff;
+    border: 1px solid rgba(230, 57, 70, 0.4);
   }
   .nav-toggle{
-    display:block; background:none; border:none; cursor:pointer;
-    width: 44px; height:44px; padding: 8px; color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    width: 44px; height: 44px;
+    min-width: 44px; min-height: 44px;
+    padding: 8px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .nav-toggle svg{
+    stroke: #0f172a !important;
+    width: 24px; height: 24px;
   }
   .field-row{ flex-direction:column; gap:0; }
   .resource-item{ flex-direction: column; align-items: flex-start; }
   .resource-item .btn{ width: 100%; margin-top: 8px; }
 }
+
+/* Media Filter & Playback Styles */
+.media-filter-bar{
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.media-filter-btn{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--vu-silver);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.media-filter-btn:hover, .media-filter-btn.active{
+  background: var(--vu-blue);
+  color: #fff;
+  border-color: var(--vu-blue);
+}
+.audio-player-box{
+  margin-top: 10px;
+  width: 100%;
+  max-width: 520px;
+}
+.audio-player-box audio{
+  width: 100%;
+  height: 40px;
+  border-radius: 8px;
+}
+.video-player-box{
+  margin-top: 10px;
+  width: 100%;
+  max-width: 600px;
+}
+.video-player-box video{
+  width: 100%;
+  max-height: 340px;
+  border-radius: 10px;
+  background: #000;
+}
+.resource-topic-tag{
+  background: rgba(78, 143, 209, 0.18);
+  border: 1px solid rgba(78, 143, 209, 0.35);
+  color: #7dd3fc;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-top: 4px;
+}
+.resource-media-badge{
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.badge-doc{ background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+.badge-audio{ background: rgba(234, 179, 8, 0.2); color: #facc15; }
+.badge-video{ background: rgba(230, 57, 70, 0.2); color: #ff7b88; }
 </style>
 </head>
 <body>
@@ -723,6 +818,14 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
         <button data-cat="selftest">Self-Test Questions</button>
       </div>
 
+      <!-- Media format filter bar -->
+      <div class="media-filter-bar" id="mediaFilterBar">
+        <button class="media-filter-btn active" data-media="all">All Formats</button>
+        <button class="media-filter-btn" data-media="document">📄 Documents</button>
+        <button class="media-filter-btn" data-media="audio">🎙️ Audio Lectures</button>
+        <button class="media-filter-btn" data-media="video">🎥 Video Tutorials</button>
+      </div>
+
       <div class="resource-toolbar">
         <!-- Scrollable Dropdown Selector for Course Selection -->
         <select id="courseDropdownSelect" aria-label="Select Course Folder">
@@ -770,6 +873,31 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
     </div>
 
     <form id="uploadForm">
+      <div class="field">
+        <label for="upTitle">Resource Title</label>
+        <input type="text" id="upTitle" required placeholder="e.g. Introduction to Object-Oriented Programming">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="upResourceType">Resource Type</label>
+          <select id="upResourceType" required>
+            <option value="document" selected>📄 Notes / Document (PDF, Word, PPT, Excel)</option>
+            <option value="audio">🎙️ Audio (Recorded lecture, discussion, revision)</option>
+            <option value="video">🎥 Video (Recorded lecture, tutorial, demonstration)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="upCategory">Resource Category</label>
+          <select id="upCategory" required>
+            <option value="lectures">Missed Lecture Notes</option>
+            <option value="papers">Past Papers</option>
+            <option value="summaries">Summarized Notes</option>
+            <option value="selftest">Self-Test Questions</option>
+          </select>
+        </div>
+      </div>
+
       <div class="field-row">
         <div class="field">
           <label for="upFaculty">Faculty</label>
@@ -792,26 +920,24 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
       </div>
 
       <div class="field">
-        <label for="upCategory">Resource Category</label>
-        <select id="upCategory" required>
-          <option value="lectures">Missed Lecture Notes</option>
-          <option value="papers">Past Papers</option>
-          <option value="summaries">Summarized Notes</option>
-          <option value="selftest">Self-Test Questions</option>
-        </select>
+        <label for="upTopic">Topic / Module</label>
+        <input type="text" id="upTopic" required placeholder="e.g. Object-Oriented Programming or Module 2">
       </div>
+
       <div class="field">
-        <label for="upTitle">Resource Title</label>
-        <input type="text" id="upTitle" required placeholder="e.g. Module 2 Lecture — Software Architecture">
+        <label for="upDescription">Description (Optional)</label>
+        <textarea id="upDescription" rows="2" placeholder="Briefly describe the topics covered, key concepts, or examination focus…"></textarea>
       </div>
+
       <div class="field">
-        <label for="upUploader">Your Name</label>
+        <label for="upUploader">Your Name / Student ID</label>
         <input type="text" id="upUploader" required placeholder="e.g. Grace Namutebi">
       </div>
+
       <div class="field">
-        <label for="upFile">Select File</label>
-        <input type="file" id="upFile" required accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.csv,.xls,.xlsx,.md">
-        <p class="form-note">Accepted: PDF, DOCX, PPTX, TXT, XLS, XLSX. Max 50 MB.</p>
+        <label for="upFile" id="upFileLabel">Select Educational File</label>
+        <input type="file" id="upFile" required accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.rtf,.odt,.md">
+        <p class="form-note" id="upFileNote">Accepted: PDF, DOCX, PPTX, TXT, XLS, XLSX. Max 50 MB.</p>
       </div>
 
       <!-- AI Content Monitor Panel -->
@@ -865,7 +991,6 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
   <div class="container">
     <div class="footer-bottom">
       <span>An independent student-run resource hub for Victoria University Uganda. This platform is not an official university system.</span>
-      <span>Shared via Firebase &amp; Local Storage.</span>
     </div>
   </div>
 </footer>
@@ -875,11 +1000,13 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 
 <!-- Application Scripts -->
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/ai-monitor.js"></script>
+<script src="js/ai-service.js"></script>
 
 <script>
 const CATEGORY_LABEL = {
@@ -891,6 +1018,7 @@ const CATEGORY_LABEL = {
 
 let activeCourse = null;
 let activeCategory = new URLSearchParams(location.search).get('cat') || 'lectures';
+let activeMediaType = 'all';
 let coursesCache = [];
 let resourcesCache = [];
 
@@ -905,9 +1033,18 @@ function renderCourseList(){
   const courseNames = coursesCache.map(c => c.name);
   if(!activeCourse && courseNames.length) activeCourse = courseNames[0];
 
+  const currentUid = (typeof getCurrentUserId === 'function') ? getCurrentUserId() : null;
+  const isAdmin = (typeof isAdminUser === 'function') ? isAdminUser() : false;
+
   // Populate Sidebar buttons
   const buttonsHtml = courseNames.map(c => {
-    const count = resourcesCache.filter(r => r.course === c).length;
+    const count = resourcesCache.filter(r => {
+      if (r.course !== c) return false;
+      if (r.status === 'Approved') return true;
+      if (isAdmin) return true;
+      if (currentUid && r.ownerId === currentUid && r.status !== 'Rejected') return true;
+      return false;
+    }).length;
     return `<button data-course="${c}" class="${c === activeCourse ? 'active' : ''}">
       <span>${c}</span><span class="count">${count}</span>
     </button>`;
@@ -916,7 +1053,7 @@ function renderCourseList(){
   list.innerHTML = buttonsHtml;
 
   // Populate Dropdown Select
-  dropdownSelect.innerHTML = courseNames.map(c =>
+  dropdownSelect.innerHTML = `<option value="All" ${activeCourse === 'All' ? 'selected' : ''}>All Course Folders</option>` + courseNames.map(c =>
     `<option value="${c}" ${c === activeCourse ? 'selected' : ''}>${c}</option>`
   ).join('');
 
@@ -956,10 +1093,42 @@ function renderResources(){
   const clearSearchBtn = document.getElementById('clearSearchBtn');
   const query = document.getElementById('resourceSearch').value.trim().toLowerCase();
 
-  let items = resourcesCache.filter(r => r.course === activeCourse && (r.category === activeCategory || r.resourceType === activeCategory));
+  // Filter: Approved resources are public.
+  // Uploader can see their own pending submissions. Admins see all resources.
+  const currentUid = (typeof getCurrentUserId === 'function') ? getCurrentUserId() : null;
+  const isAdmin = (typeof isAdminUser === 'function') ? isAdminUser() : false;
+
+  let items = resourcesCache.filter(r => {
+    if (r.status === 'Approved') return true;
+    if (isAdmin) return true;
+    if (currentUid && r.ownerId === currentUid && r.status !== 'Rejected') return true;
+    return false;
+  });
+
+  // Course Filter
+  if (activeCourse && activeCourse !== 'All') {
+    items = items.filter(r => r.course === activeCourse);
+  }
+
+  // Category Filter
+  if (activeCategory) {
+    items = items.filter(r => (r.category === activeCategory || r.resourceType === activeCategory));
+  }
+
+  // Media Type Filter
+  if (activeMediaType && activeMediaType !== 'all') {
+    items = items.filter(r => {
+      const mType = r.mediaType || (r.resourceType === 'audio' ? 'audio' : (r.resourceType === 'video' ? 'video' : 'document'));
+      return mType === activeMediaType;
+    });
+  }
+
+  // Search Query Filter
   if(query) {
     items = items.filter(r => 
       (r.title && r.title.toLowerCase().includes(query)) || 
+      (r.topic && r.topic.toLowerCase().includes(query)) || 
+      (r.description && r.description.toLowerCase().includes(query)) || 
       (r.uploader && r.uploader.toLowerCase().includes(query))
     );
   }
@@ -969,10 +1138,10 @@ function renderResources(){
   if (items.length === 0) {
     empty.style.display = 'block';
     if(query) {
-      emptyMsgText.textContent = 'No resources match your search term in this category.';
+      emptyMsgText.textContent = 'No educational resources match your search in this filter.';
       clearSearchBtn.style.display = 'inline-block';
     } else {
-      emptyMsgText.textContent = 'Be the first to upload something to this folder.';
+      emptyMsgText.textContent = 'No resources uploaded in this filter yet. Be the first to contribute!';
       clearSearchBtn.style.display = 'none';
     }
   } else {
@@ -993,20 +1162,66 @@ function renderResources(){
     
     const isOwner = r.ownerId === currentUid || !FIREBASE_READY;
 
+    // Detect media format
+    const mType = r.mediaType || (r.resourceType === 'audio' ? 'audio' : (r.resourceType === 'video' ? 'video' : 'document'));
+    const isAudio = mType === 'audio';
+    const isVideo = mType === 'video';
+    const isDoc = !isAudio && !isVideo;
+
+    let mediaBadge = '<span class="resource-media-badge badge-doc">📄 Document</span>';
+    let mediaIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6l5 5v13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M9 12h6M9 16h6"/></svg>`;
+
+    if (isAudio) {
+      mediaBadge = '<span class="resource-media-badge badge-audio">🎙️ Audio Lecture</span>';
+      mediaIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
+    } else if (isVideo) {
+      mediaBadge = '<span class="resource-media-badge badge-video">🎥 Video Tutorial</span>';
+      mediaIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`;
+    }
+
+    let playbackHtml = '';
+    if (isAudio && downloadable) {
+      playbackHtml = `
+        <div class="audio-player-box">
+          <audio controls preload="metadata" src="${downloadHref}">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      `;
+    } else if (isVideo && downloadable) {
+      playbackHtml = `
+        <div class="video-player-box">
+          <video controls preload="metadata" playsinline src="${downloadHref}">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      `;
+    }
+
     row.innerHTML = `
-      <div class="file-icon">${fileIconSvg()}</div>
-      <div class="resource-info">
+      <div class="file-icon">${mediaIcon}</div>
+      <div class="resource-info" style="flex:1;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:4px;">
+          ${mediaBadge}
+          <span class="resource-tag">${CATEGORY_LABEL[r.category || r.resourceType] || 'Note'}</span>
+          ${r.topic ? `<span class="resource-topic-tag">📌 ${r.topic}</span>` : ''}
+          ${r.status === 'Pending' ? `<span class="status-badge badge-yellow" style="font-size:11px; padding:2px 8px;">🟡 Pending Approval</span>` : ''}
+          ${r.status === 'Approved' && (isAdmin || isOwner) ? `<span class="status-badge badge-green" style="font-size:11px; padding:2px 8px;">🟢 Live</span>` : ''}
+        </div>
         <h4>${r.title}</h4>
+        ${r.description ? `<p style="font-size:13.5px;color:#cbd5e1;margin:4px 0 8px;">${r.description}</p>` : ''}
         <div class="meta">
-          <span>${r.fileName || r.originalFileName || 'Document'}${r.fileSize ? ' · ' + fileSizeLabel(r.fileSize) : ''}</span>
+          <span>${r.fileName || r.originalFileName || 'Resource'}${r.fileSize ? ' · ' + fileSizeLabel(r.fileSize) : ''}</span>
+          <span>Faculty: <strong>${r.faculty || 'General'}</strong></span>
+          <span>Course: <strong>${r.course || 'General'}</strong></span>
           <span>Uploaded by ${r.uploader || r.uploadedBy || 'Student'}</span>
           <span>${when}</span>
-          <span class="resource-tag">${CATEGORY_LABEL[r.category || r.resourceType] || 'Note'}</span>
         </div>
+        ${playbackHtml}
       </div>
       <div class="resource-actions">
         ${downloadable
-          ? `<a class="btn btn-primary btn-small" target="_blank" rel="noopener" download="${r.fileName || 'document'}" href="${downloadHref}">Download / View</a>`
+          ? `<a class="btn btn-primary btn-small" target="_blank" rel="noopener" download="${r.fileName || 'resource'}" href="${downloadHref}">${isVideo ? 'View / Download' : (isAudio ? 'Listen / Download' : 'Download / View')}</a>`
           : `<span class="form-note" style="white-space:nowrap;">No file</span>`}
         ${isOwner ? `<button class="btn btn-danger btn-small delete-btn" data-id="${r.id}" data-path="${r.storagePath || ''}" data-owner="${r.ownerId || ''}">Delete</button>` : ''}
       </div>
@@ -1037,6 +1252,7 @@ function renderResources(){
   });
 }
 
+/* Category filter buttons */
 document.getElementById('categoryTabs').addEventListener('click', (e)=>{
   const btn = e.target.closest('button[data-cat]');
   if(!btn) return;
@@ -1046,12 +1262,23 @@ document.getElementById('categoryTabs').addEventListener('click', (e)=>{
   renderResources();
 });
 
+/* Media format filter buttons */
+document.getElementById('mediaFilterBar')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-media]');
+  if (!btn) return;
+  document.querySelectorAll('#mediaFilterBar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeMediaType = btn.dataset.media;
+  renderResources();
+});
+
 document.getElementById('resourceSearch').addEventListener('input', renderResources);
 document.getElementById('clearSearchBtn').addEventListener('click', () => {
   document.getElementById('resourceSearch').value = '';
   renderResources();
 });
 
+/* Faculty -> Course dependent dropdown in Upload Modal */
 const upFacEl = document.getElementById('upFaculty');
 const upCrsEl = document.getElementById('upCourse');
 if (upFacEl && upCrsEl) {
@@ -1060,6 +1287,52 @@ if (upFacEl && upCrsEl) {
     const file = document.getElementById('upFile').files[0];
     if (file && upCrsEl.value) runAiCheck(file);
   });
+}
+
+/* Update file accept attributes when Resource Type changes */
+document.getElementById('upResourceType').addEventListener('change', (e) => {
+  const type = e.target.value;
+  const fileInput = document.getElementById('upFile');
+  const fileNote = document.getElementById('upFileNote');
+  if (type === 'audio') {
+    fileInput.accept = '.mp3,.wav,.m4a,.aac,.ogg,.wma,.flac,audio/*';
+    fileNote.textContent = 'Accepted: MP3, WAV, M4A, AAC, OGG. Max 80 MB.';
+  } else if (type === 'video') {
+    fileInput.accept = '.mp4,.webm,.ogg,.mov,.mkv,.avi,video/*';
+    fileNote.textContent = 'Accepted: MP4, WEBM, MOV, MKV. Max 150 MB.';
+  } else {
+    fileInput.accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.rtf,.odt,.md';
+    fileNote.textContent = 'Accepted: PDF, DOCX, PPTX, TXT, XLS, XLSX. Max 50 MB.';
+  }
+  const file = fileInput.files[0];
+  if (file && document.getElementById('upCourse').value) {
+    runAiCheck(file);
+  }
+});
+
+/* Validate uploaded file by extension and size (Requirement 20) */
+function validateUploadedFile(file, resourceType) {
+  if (!file) return false;
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const validDocs = ['pdf','doc','docx','ppt','pptx','xls','xlsx','txt','csv','rtf','odt','md'];
+  const validAudio = ['mp3','wav','m4a','aac','ogg','wma','flac'];
+  const validVideo = ['mp4','webm','ogg','mov','mkv','avi','m4v'];
+
+  if (resourceType === 'audio') {
+    if (!validAudio.includes(ext) && !file.type.startsWith('audio/')) return false;
+    if (file.size > 80 * 1024 * 1024) return false;
+    return true;
+  }
+  if (resourceType === 'video') {
+    if (!validVideo.includes(ext) && !file.type.startsWith('video/')) return false;
+    if (file.size > 150 * 1024 * 1024) return false;
+    return true;
+  }
+  if (!validDocs.includes(ext) && !file.type.includes('pdf') && !file.type.includes('officedocument') && !file.type.startsWith('text/')) {
+    return false;
+  }
+  if (file.size > 50 * 1024 * 1024) return false;
+  return true;
 }
 
 function openUploadModal(){
@@ -1169,9 +1442,15 @@ async function runAiCheck(file){
   currentAiStatus = null;
 
   const selectedCourse = document.getElementById('upCourse').value;
+  const metadata = {
+    title: document.getElementById('upTitle').value,
+    topic: document.getElementById('upTopic').value,
+    description: document.getElementById('upDescription').value,
+    resourceType: document.getElementById('upResourceType').value
+  };
 
   try{
-    const result = await AIMonitor.analyzeFile(file, selectedCourse);
+    const result = await AIMonitor.analyzeFile(file, selectedCourse, metadata);
     showAiResult(result);
   } catch(e){
     showAiResult({ status:'error', confidence:0, message:'Content analysis encountered an error.', details: e.message || '' });
@@ -1188,6 +1467,18 @@ document.getElementById('upCourse').addEventListener('change', () => {
 document.getElementById('upFile').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
+
+  const resourceType = document.getElementById('upResourceType').value;
+  if (!validateUploadedFile(file, resourceType)) {
+    showAiResult({
+      status: 'rejected',
+      confidence: 100,
+      message: '❌ Unsupported File — Please upload a supported educational document, audio, or video file.',
+      details: 'Supported formats: PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, TXT, MP3, WAV, M4A, AAC, MP4, WEBM, MOV.'
+    });
+    return;
+  }
+
   // Reset step indicators
   document.getElementById('stepIndicator1').className = 'upload-step done';
   document.getElementById('stepIndicator1').querySelector('.upload-step-num').textContent = '✓';
@@ -1202,20 +1493,42 @@ document.getElementById('aiChangeCourse').addEventListener('click', () => {
 
 document.getElementById('uploadForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
+  const file = document.getElementById('upFile').files[0];
+  const resourceType = document.getElementById('upResourceType').value;
+
+  if (!file) {
+    showToast('Please select a file to upload.');
+    return;
+  }
+
+  if (!validateUploadedFile(file, resourceType)) {
+    showToast('❌ Unsupported File — Please upload a supported educational document, audio, or video file.');
+    return;
+  }
+
   if(currentAiStatus === 'rejected'){
     showToast('Upload blocked — file did not pass the academic content check.');
     return;
   }
+
   const submitBtn = e.target.querySelector('button[type=submit]');
   submitBtn.disabled = true; submitBtn.textContent = 'Uploading…';
-  const file = document.getElementById('upFile').files[0];
+
+  const uploadStatus = (typeof isAdminUser === 'function' && isAdminUser()) ? 'Approved' : 'Pending';
+
   const resource = {
     faculty: document.getElementById('upFaculty').value,
     course: document.getElementById('upCourse').value,
+    topic: document.getElementById('upTopic').value,
+    description: document.getElementById('upDescription').value,
     category: document.getElementById('upCategory').value,
+    resourceType: resourceType,
+    mediaType: resourceType,
     title: document.getElementById('upTitle').value,
-    uploader: document.getElementById('upUploader').value
+    uploader: document.getElementById('upUploader').value,
+    status: uploadStatus
   };
+
   try{
     await STORE.addResource(resource, file);
     closeModal('uploadModal');
@@ -1237,10 +1550,14 @@ document.getElementById('uploadForm').addEventListener('submit', async (e)=>{
     });
     renderCourseList();
     renderResources();
-    showToast('✅ Resource uploaded to shared folder!');
+    if (uploadStatus === 'Approved') {
+      showToast('✅ Resource uploaded and published!');
+    } else {
+      showToast('✅ Resource uploaded! Awaiting administrator review before public listing.');
+    }
   }catch(err){
     console.error(err);
-    showToast('Upload failed — please try again');
+    showToast('Upload failed: ' + (err.message || 'Please try again'));
   }finally{
     submitBtn.disabled = (currentAiStatus === 'rejected'); submitBtn.textContent = '⬆ Add to Shared Folder';
   }

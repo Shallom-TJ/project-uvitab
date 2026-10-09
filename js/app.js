@@ -109,6 +109,9 @@ async function seedIfNeeded() {
     const seedDoc = await seedRef.get();
     if (seedDoc.exists) return;
 
+    // Only administrators possess permission to write to /courses and /meta
+    if (!_isAdminUser) return;
+
     const batch = db.batch();
     DEFAULT_COURSES.forEach(c => {
       const newDocRef = db.collection('courses').doc();
@@ -116,9 +119,9 @@ async function seedIfNeeded() {
     });
     batch.set(seedRef, { done: true, seededAt: firebase.firestore.FieldValue.serverTimestamp() });
     await batch.commit();
-    console.log("Firestore course list seeded successfully.");
+    console.log("Firestore course list seeded successfully by administrator.");
   } catch (e) {
-    console.error("Seeding error:", e);
+    console.warn("Seeding check note:", e.message);
   }
 }
 
@@ -155,10 +158,23 @@ const FirebaseStore = {
     });
   },
 
-  async uploadStorageFile(file, path) {
+  async uploadStorageFile(file, path, customMetadata = {}) {
     if (!storage) throw new Error("Firebase Storage is not initialized.");
+    // Ensure auth state has resolved so request.auth.uid strictly matches customMetadata.ownerId
+    let uid = (currentUser && currentUser.uid) || (auth && auth.currentUser && auth.currentUser.uid);
+    if (!uid && auth) {
+      uid = await new Promise(resolve => {
+        const unsub = auth.onAuthStateChanged(u => {
+          if (u) { unsub(); resolve(u.uid); }
+        });
+        setTimeout(() => { unsub(); resolve(getCurrentUserId()); }, 1500);
+      });
+    }
+    if (!uid) uid = getCurrentUserId();
+
     const ref = storage.ref().child(path);
-    const snap = await ref.put(file);
+    // Include ownerId in custom metadata so storage.rules can verify ownership
+    const snap = await ref.put(file, { customMetadata: { ownerId: uid, ...customMetadata } });
     const downloadURL = await snap.ref.getDownloadURL();
     return { downloadURL, storagePath: path };
   },
@@ -181,13 +197,20 @@ const FirebaseStore = {
       storagePath = uploadRes.storagePath;
     }
 
+    // Security: Normal users always upload as 'Pending' — only admins can set 'Approved'
+    // Never trust a client-supplied status for elevation; Firestore rules enforce this too
+    const uploadStatus = _isAdminUser ? (r.status || 'Approved') : 'Pending';
+
     const docData = {
       title: r.title || fileName || 'Untitled Document',
       description: r.description || '',
       faculty: r.faculty || '',
       course: r.course || 'General',
+      topic: r.topic || '',
+      resourceType: r.resourceType || 'Notes/Document',
+      mediaType: r.mediaType || 'document',
       category: r.category || 'lectures',
-      resourceType: r.category || 'lectures',
+      status: uploadStatus,
       uploader: r.uploader || 'Anonymous Student',
       uploadedBy: r.uploader || 'Anonymous Student',
       ownerId: getCurrentUserId(),
@@ -212,10 +235,29 @@ const FirebaseStore = {
     }
   },
 
+  async updateResource(docId, updateData) {
+    if (!FIREBASE_READY || !db) throw new Error("Firebase is not connected.");
+    await db.collection('resources').doc(docId).update({
+      ...updateData,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  },
+
+  async moderateResource(docId, status, rejectionReason = '') {
+    if (!FIREBASE_READY || !db) throw new Error("Firebase is not connected.");
+    await FirebaseStore.updateResource(docId, {
+      status: status,
+      moderatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      moderatedBy: currentUser ? (currentUser.email || currentUser.uid) : 'Admin',
+      moderationNotes: rejectionReason
+    });
+  },
+
   async deleteResource(id, storagePath, ownerId) {
     if (!FIREBASE_READY || !db) throw new Error("Firebase is not connected.");
     const currentUid = getCurrentUserId();
-    if (ownerId && ownerId !== currentUid) {
+    const isAdmin = typeof isAdminUser === 'function' && isAdminUser();
+    if (!isAdmin && ownerId && ownerId !== currentUid) {
       throw new Error("You do not have permission to delete this resource.");
     }
 
@@ -241,7 +283,11 @@ const FirebaseStore = {
       storagePath = uploadRes.storagePath;
     }
 
+    const tutorId = 'TUT-' + Math.floor(1000 + Math.random() * 9000);
+
     const docData = {
+      id: tutorId,
+      tutorId: tutorId,
       name: t.name,
       faculty: t.faculty || 'Faculty of Science and Technology',
       course: t.course || t.subject || 'General',
@@ -265,11 +311,11 @@ const FirebaseStore = {
     await FirebaseStore.addNotification({
       type: 'TUTOR_REGISTERED',
       title: '🧑🏽‍🏫 NEW TUTOR REGISTERED',
-      message: `Tutor: ${t.name} | Faculty: ${t.faculty} | Course: ${t.course || t.subject} | Fee: UGX ${t.feeAmount ? Number(t.feeAmount).toLocaleString() : 'Free'}`,
-      tutorId: docRef.id
+      message: `Tutor: ${t.name} (ID: ${tutorId}) | Faculty: ${t.faculty} | Course: ${t.course || t.subject} | Fee: UGX ${t.feeAmount ? Number(t.feeAmount).toLocaleString() : 'Free'}`,
+      tutorId: tutorId
     });
 
-    return docRef.id;
+    return tutorId;
   },
 
   async updateTutor(id, t, photoFile, currentPhotoStoragePath) {
@@ -389,15 +435,14 @@ const FirebaseStore = {
     return bookingId;
   },
 
-  async updateBooking(id, updateData) {
+  async updateBooking(docId, updateData) {
     if (!FIREBASE_READY || !db) throw new Error("Firebase is not connected.");
-    const snap = await db.collection('bookings').where('id', '==', id).get();
-    if (!snap.empty) {
-      await snap.docs[0].ref.update({
-        ...updateData,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
+    // Use the Firestore document ID directly — do NOT query by field 'id'
+    // bookingCache items already have { id: d.id, ...d.data() } where id IS the doc ID
+    await db.collection('bookings').doc(docId).update({
+      ...updateData,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   },
 
   watchNotifications(cb) {
@@ -438,6 +483,7 @@ const FirebaseStore = {
     if (!FIREBASE_READY || !db) throw new Error("Firebase is not connected.");
     await db.collection('reviews').add({
       ...r,
+      reviewerId: getCurrentUserId(), // Required by Firestore rules to prevent impersonation
       flagged: false,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -498,12 +544,13 @@ function localNotify(kind) {
 
 function seedLocalIfNeeded() {
   // Reset legacy hardcoded fake data once to start with clean real data
-  if (!localStorage.getItem('vu_clean_v6')) {
+  if (!localStorage.getItem('vu_clean_v7')) {
     localStorage.removeItem(LOCAL_KEYS.tutors);
+    localStorage.removeItem(LOCAL_KEYS.resources);
     localStorage.removeItem(LOCAL_KEYS.bookings);
     localStorage.removeItem(LOCAL_KEYS.notifications);
     localStorage.removeItem(LOCAL_KEYS.reviews);
-    localStorage.setItem('vu_clean_v6', 'true');
+    localStorage.setItem('vu_clean_v7', 'true');
   }
 
   const existingCourses = localStorage.getItem(LOCAL_KEYS.courses);
@@ -551,9 +598,21 @@ const LocalStore = {
       fileURL = res.downloadURL;
     }
     const list = localGet(LOCAL_KEYS.resources);
+    // Security: Local mode also forces Pending for non-admins
+    const uploadStatus = _isAdminUser ? (r.status || 'Approved') : 'Pending';
     const newDoc = {
       id: 'r_' + Date.now(),
-      ...r,
+      title: r.title || fileName || 'Untitled Document',
+      description: r.description || '',
+      faculty: r.faculty || '',
+      course: r.course || 'General',
+      topic: r.topic || '',
+      resourceType: r.resourceType || 'Notes/Document',
+      mediaType: r.mediaType || 'document',
+      category: r.category || 'lectures',
+      status: uploadStatus,
+      uploader: r.uploader || 'Anonymous Student',
+      uploadedBy: r.uploader || 'Anonymous Student',
       ownerId: getCurrentUserId(),
       fileURL, downloadURL: fileURL, fileName, originalFileName: fileName, fileSize,
       createdAt: new Date().toISOString()
@@ -561,6 +620,25 @@ const LocalStore = {
     list.unshift(newDoc);
     localSet(LOCAL_KEYS.resources, list);
     localNotify('resources');
+    return newDoc.id;
+  },
+
+  async updateResource(id, updateData) {
+    const list = localGet(LOCAL_KEYS.resources);
+    const idx = list.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...updateData, updatedAt: new Date().toISOString() };
+      localSet(LOCAL_KEYS.resources, list);
+      localNotify('resources');
+    }
+  },
+
+  async moderateResource(id, status, rejectionReason = '') {
+    await LocalStore.updateResource(id, {
+      status: status,
+      moderationNotes: rejectionReason,
+      moderatedAt: new Date().toISOString()
+    });
   },
 
   async deleteResource(id) {
@@ -576,10 +654,19 @@ const LocalStore = {
       const res = await LocalStore.uploadStorageFile(photoFile);
       photoURL = res.downloadURL;
     }
+    const tutorId = 'TUT-' + Math.floor(1000 + Math.random() * 9000);
     const list = localGet(LOCAL_KEYS.tutors);
     const newTutor = {
-      id: 't_' + Date.now(),
-      ...t,
+      id: tutorId,
+      tutorId: tutorId,
+      name: t.name,
+      faculty: t.faculty || 'Faculty of Science and Technology',
+      course: t.course || t.subject || 'General',
+      subject: t.course || t.subject || 'General',
+      phone: t.phone,
+      email: t.email,
+      bio: t.bio || '',
+      availability: t.availability || 'Flexible',
       feeAmount: t.feeAmount || '',
       feeDuration: t.feeDuration || '1 Hour',
       photoURL,
@@ -594,9 +681,11 @@ const LocalStore = {
     await LocalStore.addNotification({
       type: 'TUTOR_REGISTERED',
       title: '🧑🏽‍🏫 NEW TUTOR REGISTERED',
-      message: `Tutor: ${t.name} | Subject: ${t.subject} | Fee: UGX ${t.feeAmount || 0} / ${t.feeDuration || '1 Hour'}`,
-      tutorId: newTutor.id
+      message: `Tutor: ${t.name} (ID: ${tutorId}) | Course: ${t.course || t.subject} | Fee: UGX ${t.feeAmount ? Number(t.feeAmount).toLocaleString() : 'Free'}`,
+      tutorId: tutorId
     });
+
+    return tutorId;
   },
 
   async updateTutor(id, t, photoFile) {

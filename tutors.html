@@ -473,16 +473,18 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
 @media (max-width: 640px){
   .nav-links{
     position: fixed; top: 62px; left:0; right:0;
-    background: rgba(9, 10, 15, 0.96);
-    backdrop-filter: blur(20px);
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     flex-direction: column; align-items:stretch; padding: 20px 24px 28px;
     gap: 12px;
     display:none;
     z-index: 999;
-    box-shadow: 0 16px 32px rgba(0,0,0,0.85);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.9);
   }
   .nav-links.open{ display:flex; }
+  .nav-links li{ width: 100%; list-style: none; }
   .nav-links a{
     padding: 14px 20px;
     min-height: 48px;
@@ -490,12 +492,35 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
     align-items: center;
     width: 100%;
     font-size: 16px;
+    font-weight: 600;
     margin-bottom: 4px;
-    border-radius: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8fafc;
+    transition: all 0.2s ease;
+  }
+  .nav-links a:hover, .nav-links a.active{
+    background: rgba(230, 57, 70, 0.2);
+    color: #ffffff;
+    border: 1px solid rgba(230, 57, 70, 0.4);
   }
   .nav-toggle{
-    display:block; background:none; border:none; cursor:pointer;
-    width: 44px; height:44px; padding: 8px; color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    width: 44px; height: 44px;
+    min-width: 44px; min-height: 44px;
+    padding: 8px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .nav-toggle svg{
+    stroke: #0f172a !important;
+    width: 24px; height: 24px;
   }
   .tutor-grid{ grid-template-columns: 1fr; }
   .filter-bar{ flex-direction: column; align-items: stretch; }
@@ -578,18 +603,43 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
       <div>
         <div class="fee-label">Tutoring Fee</div>
         <div class="fee-amount" id="bookingFeeAmount">UGX 0 / 1 Hour</div>
-        <div class="fee-note">This is the tutor's stated fee. Payment is arranged directly with the tutor after the session is confirmed.</div>
+        <div class="fee-note">Payment is arranged directly with the tutor after the session request is accepted.</div>
       </div>
     </div>
     <form id="bookForm">
-      <div class="field">
-        <label for="studentName">Your Name</label>
-        <input type="text" id="studentName" required placeholder="e.g. Grace Namutebi">
+      <div class="field-row">
+        <div class="field">
+          <label for="bookTutorInput">Selected Tutor</label>
+          <input type="text" id="bookTutorInput" readonly style="opacity:0.85; background:rgba(255,255,255,0.05);">
+        </div>
+        <div class="field">
+          <label for="bookCourseInput">Course</label>
+          <input type="text" id="bookCourseInput" readonly style="opacity:0.85; background:rgba(255,255,255,0.05);">
+        </div>
       </div>
-      <div class="field">
-        <label for="studentEmail">Your Email</label>
-        <input type="email" id="studentEmail" required placeholder="you@student.vu.ac.ug">
+
+      <div class="field-row">
+        <div class="field">
+          <label for="bookDurationInput">Session Duration</label>
+          <input type="text" id="bookDurationInput" readonly style="opacity:0.85; background:rgba(255,255,255,0.05);">
+        </div>
+        <div class="field">
+          <label for="bookFeeInput">Stated Fee</label>
+          <input type="text" id="bookFeeInput" readonly style="opacity:0.85; background:rgba(255,255,255,0.05);">
+        </div>
       </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="studentName">Your Full Name</label>
+          <input type="text" id="studentName" required placeholder="e.g. Grace Namutebi">
+        </div>
+        <div class="field">
+          <label for="studentEmail">Your Student Email</label>
+          <input type="email" id="studentEmail" required placeholder="you@student.vu.ac.ug">
+        </div>
+      </div>
+
       <div class="field-row">
         <div class="field">
           <label for="sessionDate">Preferred Date</label>
@@ -601,11 +651,11 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
         </div>
       </div>
       <div class="field">
-        <label for="sessionNote">What do you need help with?</label>
+        <label for="sessionNote">Optional Message / Session Goals</label>
         <textarea id="sessionNote" placeholder="e.g. Need assistance preparing for upcoming CAT exams in Software Engineering"></textarea>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Confirm Booking Request</button>
-      <p class="form-note">The tutor will receive your session request details directly.</p>
+      <p class="form-note">Your booking will be created with status: Pending. The tutor will receive your session details directly.</p>
     </form>
   </div>
 </div>
@@ -846,7 +896,6 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
   <div class="container">
     <div class="footer-bottom">
       <span>An independent student-run resource hub for Victoria University Uganda. This platform is not an official university system.</span>
-      <span>Live Shared Database via Firebase Cloud Firestore.</span>
     </div>
   </div>
 </footer>
@@ -856,10 +905,12 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 
 <!-- Application Scripts -->
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js"></script>
+<script src="js/ai-service.js"></script>
 
 <script>
 let currentTutorForBooking = null;
@@ -1009,13 +1060,21 @@ function renderTutors() {
       const t = tutorsCache.find(x => x.id === btn.dataset.id);
       if (!t) return;
       currentTutorForBooking = t;
+      const courseName = t.course || t.subject || 'General';
+      const statedFee = (t.feeAmount && Number(t.feeAmount) > 0) ? 'UGX ' + Number(t.feeAmount).toLocaleString() : 'Free';
+      const duration = t.feeDuration || '1 Hour';
+
       document.getElementById('bookTutorName').textContent = 'Book Session with ' + t.name;
-      document.getElementById('bookTutorSubject').textContent = (t.course || t.subject || 'General') + ' · ' + (t.faculty || 'Victoria University Uganda');
+      document.getElementById('bookTutorSubject').textContent = courseName + ' · ' + (t.faculty || 'Victoria University Uganda');
+      document.getElementById('bookTutorInput').value = t.name;
+      document.getElementById('bookCourseInput').value = courseName;
+      document.getElementById('bookDurationInput').value = duration;
+      document.getElementById('bookFeeInput').value = statedFee;
 
       const feeBox = document.getElementById('bookingFeeBox');
       const feeAmountEl = document.getElementById('bookingFeeAmount');
       if (t.feeAmount && Number(t.feeAmount) > 0) {
-        feeAmountEl.textContent = 'UGX ' + Number(t.feeAmount).toLocaleString() + ' / ' + (t.feeDuration || '1 Hour');
+        feeAmountEl.textContent = statedFee + ' / ' + duration;
         feeBox.style.display = 'flex';
       } else {
         feeBox.style.display = 'none';
@@ -1413,16 +1472,6 @@ function initTutorWatchers() {
     STORE.watchTutors(list => { tutorsCache = list; renderTutors(); });
     STORE.watchBookings(list => { bookingsCache = list; renderWorkspace(); });
     STORE.watchReviews(list => { reviewsCache = list; renderTutors(); });
-  }
-}
-
-initTutorWatchers();
-</script>
-</body>
-</html>= list;
-      refreshSubjectFilter();
-      renderTutors();
-    });
   }
 }
 
