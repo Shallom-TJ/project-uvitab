@@ -24,7 +24,7 @@ To complete backend initialization for your Supabase project:
 ### Step 1: Run the Database Schema & Storage Setup
 1. Log in to your [Supabase Dashboard](https://supabase.com/dashboard/project/wnxzqewpjanebtniadmj).
 2. In the left sidebar, click **SQL Editor** → **New query**.
-3. Open [supabase-schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase-schema.sql) from this repository, copy its entire contents, paste it into the editor, and click **Run**.
+3. Open [supabase/schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase/schema.sql) (or [supabase-schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase-schema.sql)) from this repository, copy its entire contents, paste it into the editor, and click **Run**.
 4. This script executes idempotently and automatically provisions:
    - **9 PostgreSQL Database Tables**:
      - `profiles`: User accounts, administrator and superadmin role assignments

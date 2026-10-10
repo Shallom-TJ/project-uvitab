@@ -1343,6 +1343,18 @@ function openUploadModal(){
   openModal('uploadModal');
 }
 document.getElementById('uploadTrigger').addEventListener('click', openUploadModal);
+document.querySelectorAll('a[href="#upload"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    openUploadModal();
+  });
+});
+if (window.location.hash === '#upload') {
+  setTimeout(openUploadModal, 150);
+}
+window.addEventListener('hashchange', () => {
+  if (window.location.hash === '#upload') openUploadModal();
+});
 
 /* -------------------------------------------------------
    AI Content Monitor Integration for Upload Flow

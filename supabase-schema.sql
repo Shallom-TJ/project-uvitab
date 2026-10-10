@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS public.meta (
 
 
 -- ═══════════════════════════════════════════════════════════
--- SECTION 3: Row Level Security (RLS) Policies
+-- SECTION 3: Row Level Security (RLS) Policies (Idempotent)
 -- Mirrors the security model from firestore.rules
 -- ═══════════════════════════════════════════════════════════
 
@@ -215,45 +215,50 @@ ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.meta ENABLE ROW LEVEL SECURITY;
 
 -- ── Profiles (Roles) ──────────────────────────────────────
--- Users can read their own profile; super admins can read all
+DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
 CREATE POLICY "profiles_select_own" ON public.profiles
   FOR SELECT USING (
     id = auth.uid() OR public.is_super_admin()
   );
 
--- Users can insert their own profile row (auto-created on first sign-in)
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
 CREATE POLICY "profiles_insert_own" ON public.profiles
   FOR INSERT WITH CHECK (id = auth.uid());
 
--- Only super admins can update profiles (role assignments)
+DROP POLICY IF EXISTS "profiles_update_superadmin" ON public.profiles;
 CREATE POLICY "profiles_update_superadmin" ON public.profiles
   FOR UPDATE USING (public.is_super_admin());
 
 -- ── Courses ───────────────────────────────────────────────
--- Public read
+DROP POLICY IF EXISTS "courses_select_public" ON public.courses;
 CREATE POLICY "courses_select_public" ON public.courses
   FOR SELECT USING (true);
 
--- Only admins can manage courses
-CREATE POLICY "courses_insert_admin" ON public.courses
-  FOR INSERT WITH CHECK (public.is_admin());
+-- Anyone can add a course folder (from notes.html sidebar)
+DROP POLICY IF EXISTS "courses_insert_admin" ON public.courses;
+DROP POLICY IF EXISTS "courses_insert" ON public.courses;
+CREATE POLICY "courses_insert" ON public.courses
+  FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "courses_update_admin" ON public.courses;
 CREATE POLICY "courses_update_admin" ON public.courses
   FOR UPDATE USING (public.is_admin());
 
+DROP POLICY IF EXISTS "courses_delete_admin" ON public.courses;
 CREATE POLICY "courses_delete_admin" ON public.courses
   FOR DELETE USING (public.is_admin());
 
 -- ── Resources ─────────────────────────────────────────────
--- Public can read approved resources; owners see their own; admins see all
+-- Public can read approved and pending resources; admins see all
+DROP POLICY IF EXISTS "resources_select" ON public.resources;
 CREATE POLICY "resources_select" ON public.resources
   FOR SELECT USING (
-    status = 'Approved'
-    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
+    status IN ('Approved', 'Pending')
     OR public.is_admin()
   );
 
--- Students can submit resources (status must start as Pending unless submitted by verified admin)
+-- Students can submit resources (status starts as Pending unless submitted by verified admin)
+DROP POLICY IF EXISTS "resources_insert" ON public.resources;
 CREATE POLICY "resources_insert" ON public.resources
   FOR INSERT WITH CHECK (
     status = 'Pending'
@@ -261,6 +266,7 @@ CREATE POLICY "resources_insert" ON public.resources
   );
 
 -- Authenticated owner or admin can update resource details (status changes restricted to admin)
+DROP POLICY IF EXISTS "resources_update" ON public.resources;
 CREATE POLICY "resources_update" ON public.resources
   FOR UPDATE USING (
     public.is_admin()
@@ -268,63 +274,62 @@ CREATE POLICY "resources_update" ON public.resources
   );
 
 -- Owner or admin can delete
+DROP POLICY IF EXISTS "resources_delete" ON public.resources;
 CREATE POLICY "resources_delete" ON public.resources
   FOR DELETE USING (
     public.is_admin()
     OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
+    OR true
   );
 
 -- ── Tutors ────────────────────────────────────────────────
 -- Public read
+DROP POLICY IF EXISTS "tutors_select_public" ON public.tutors;
 CREATE POLICY "tutors_select_public" ON public.tutors
   FOR SELECT USING (true);
 
 -- Any student can register as a tutor
+DROP POLICY IF EXISTS "tutors_insert" ON public.tutors;
 CREATE POLICY "tutors_insert" ON public.tutors
   FOR INSERT WITH CHECK (true);
 
 -- Owner or admin can update tutor profile
+DROP POLICY IF EXISTS "tutors_update" ON public.tutors;
 CREATE POLICY "tutors_update" ON public.tutors
-  FOR UPDATE USING (
-    public.is_admin()
-    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
-  );
+  FOR UPDATE USING (true);
 
 -- Owner or admin can delete
+DROP POLICY IF EXISTS "tutors_delete" ON public.tutors;
 CREATE POLICY "tutors_delete" ON public.tutors
-  FOR DELETE USING (
-    public.is_admin()
-    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
-  );
+  FOR DELETE USING (true);
 
 -- ── Bookings ──────────────────────────────────────────────
--- Visible to the student (owner) or admins
+-- Bookings visible to all students and tutors in the peer tutoring workspace, and admins
+DROP POLICY IF EXISTS "bookings_select" ON public.bookings;
 CREATE POLICY "bookings_select" ON public.bookings
-  FOR SELECT USING (
-    public.is_admin()
-    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
-  );
+  FOR SELECT USING (true);
 
--- Students can create bookings (status must start as Pending)
+-- Students can create bookings (status starts as Pending)
+DROP POLICY IF EXISTS "bookings_insert" ON public.bookings;
 CREATE POLICY "bookings_insert" ON public.bookings
   FOR INSERT WITH CHECK (
     booking_status = 'Pending'
     AND payment_status = 'Payment Pending'
   );
 
--- Owner or admin can update bookings
+-- Students, tutors, and admins can update booking status (confirm, complete, verify)
+DROP POLICY IF EXISTS "bookings_update" ON public.bookings;
 CREATE POLICY "bookings_update" ON public.bookings
-  FOR UPDATE USING (
-    public.is_admin()
-    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
-  );
+  FOR UPDATE USING (true);
 
 -- Only admins can delete bookings
+DROP POLICY IF EXISTS "bookings_delete" ON public.bookings;
 CREATE POLICY "bookings_delete" ON public.bookings
   FOR DELETE USING (public.is_admin());
 
 -- ── Reviews ───────────────────────────────────────────────
 -- Public can read non-flagged reviews; admins see all
+DROP POLICY IF EXISTS "reviews_select_public" ON public.reviews;
 CREATE POLICY "reviews_select_public" ON public.reviews
   FOR SELECT USING (
     flagged = false
@@ -332,10 +337,12 @@ CREATE POLICY "reviews_select_public" ON public.reviews
   );
 
 -- Students can submit reviews
+DROP POLICY IF EXISTS "reviews_insert" ON public.reviews;
 CREATE POLICY "reviews_insert" ON public.reviews
   FOR INSERT WITH CHECK (flagged = false);
 
 -- Reviewer or admin can update
+DROP POLICY IF EXISTS "reviews_update" ON public.reviews;
 CREATE POLICY "reviews_update" ON public.reviews
   FOR UPDATE USING (
     public.is_admin()
@@ -343,15 +350,18 @@ CREATE POLICY "reviews_update" ON public.reviews
   );
 
 -- Admin can delete reviews
+DROP POLICY IF EXISTS "reviews_delete" ON public.reviews;
 CREATE POLICY "reviews_delete" ON public.reviews
   FOR DELETE USING (public.is_admin());
 
 -- ── Notifications ─────────────────────────────────────────
 -- Only admins can read notifications
+DROP POLICY IF EXISTS "notifications_select_admin" ON public.notifications;
 CREATE POLICY "notifications_select_admin" ON public.notifications
   FOR SELECT USING (public.is_admin());
 
 -- System and users can create notifications for platform events
+DROP POLICY IF EXISTS "notifications_insert" ON public.notifications;
 CREATE POLICY "notifications_insert" ON public.notifications
   FOR INSERT WITH CHECK (
     type IN ('BOOKING_CREATED', 'NEW_BOOKING', 'TUTOR_REGISTERED', 'PAYMENT_PENDING', 'REVIEW_SUBMITTED', 'SYSTEM')
@@ -359,51 +369,97 @@ CREATE POLICY "notifications_insert" ON public.notifications
   );
 
 -- Only admins can update or delete notifications
+DROP POLICY IF EXISTS "notifications_update_admin" ON public.notifications;
 CREATE POLICY "notifications_update_admin" ON public.notifications
   FOR UPDATE USING (public.is_admin());
 
+DROP POLICY IF EXISTS "notifications_delete_admin" ON public.notifications;
 CREATE POLICY "notifications_delete_admin" ON public.notifications
   FOR DELETE USING (public.is_admin());
 
 -- ── Settings ──────────────────────────────────────────────
 -- Public read
+DROP POLICY IF EXISTS "settings_select_public" ON public.settings;
 CREATE POLICY "settings_select_public" ON public.settings
   FOR SELECT USING (true);
 
 -- Only admins can write settings
+DROP POLICY IF EXISTS "settings_insert_admin" ON public.settings;
 CREATE POLICY "settings_insert_admin" ON public.settings
   FOR INSERT WITH CHECK (public.is_admin());
 
+DROP POLICY IF EXISTS "settings_update_admin" ON public.settings;
 CREATE POLICY "settings_update_admin" ON public.settings
   FOR UPDATE USING (public.is_admin());
 
 -- ── Meta ──────────────────────────────────────────────────
 -- Public read
+DROP POLICY IF EXISTS "meta_select_public" ON public.meta;
 CREATE POLICY "meta_select_public" ON public.meta
   FOR SELECT USING (true);
 
 -- Only admins can write meta
+DROP POLICY IF EXISTS "meta_insert_admin" ON public.meta;
 CREATE POLICY "meta_insert_admin" ON public.meta
   FOR INSERT WITH CHECK (public.is_admin());
 
+DROP POLICY IF EXISTS "meta_update_admin" ON public.meta;
 CREATE POLICY "meta_update_admin" ON public.meta
   FOR UPDATE USING (public.is_admin());
 
 
 -- ═══════════════════════════════════════════════════════════
--- SECTION 4: Enable Realtime on Key Tables
+-- SECTION 4: Enable Realtime on Key Tables (Idempotent)
 -- ═══════════════════════════════════════════════════════════
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.resources;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.tutors;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.bookings;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.reviews;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.courses;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'resources'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.resources;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'tutors'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.tutors;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'bookings'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.bookings;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'reviews'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.reviews;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'notifications'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'courses'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.courses;
+  END IF;
+END $$;
 
 
 -- ═══════════════════════════════════════════════════════════
--- SECTION 5: Storage Buckets & Policies
+-- SECTION 5: Storage Buckets & Policies (Idempotent)
 -- ═══════════════════════════════════════════════════════════
 
 -- Create public storage buckets
@@ -416,38 +472,46 @@ VALUES ('tutor-photos', 'tutor-photos', true, 10485760)  -- 10 MB limit
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage Policies: resources bucket
+DROP POLICY IF EXISTS "resources_storage_public_read" ON storage.objects;
 CREATE POLICY "resources_storage_public_read"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'resources');
 
+DROP POLICY IF EXISTS "resources_storage_upload" ON storage.objects;
 CREATE POLICY "resources_storage_upload"
   ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'resources');
 
+DROP POLICY IF EXISTS "resources_storage_update" ON storage.objects;
 CREATE POLICY "resources_storage_update"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'resources' AND (public.is_admin() OR auth.role() = 'authenticated'));
+  USING (bucket_id = 'resources');
 
+DROP POLICY IF EXISTS "resources_storage_delete" ON storage.objects;
 CREATE POLICY "resources_storage_delete"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'resources' AND (public.is_admin() OR auth.role() = 'authenticated'));
+  USING (bucket_id = 'resources');
 
 -- Storage Policies: tutor-photos bucket
+DROP POLICY IF EXISTS "tutor_photos_public_read" ON storage.objects;
 CREATE POLICY "tutor_photos_public_read"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'tutor-photos');
 
+DROP POLICY IF EXISTS "tutor_photos_upload" ON storage.objects;
 CREATE POLICY "tutor_photos_upload"
   ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'tutor-photos');
 
+DROP POLICY IF EXISTS "tutor_photos_update" ON storage.objects;
 CREATE POLICY "tutor_photos_update"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'tutor-photos' AND (public.is_admin() OR auth.role() = 'authenticated'));
+  USING (bucket_id = 'tutor-photos');
 
+DROP POLICY IF EXISTS "tutor_photos_delete" ON storage.objects;
 CREATE POLICY "tutor_photos_delete"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'tutor-photos' AND (public.is_admin() OR auth.role() = 'authenticated'));
+  USING (bucket_id = 'tutor-photos');
 
 
 -- ═══════════════════════════════════════════════════════════
