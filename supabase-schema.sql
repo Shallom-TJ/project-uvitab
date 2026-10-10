@@ -11,44 +11,10 @@
 
 
 -- ═══════════════════════════════════════════════════════════
--- SECTION 1: Helper Functions for Row Level Security
--- ═══════════════════════════════════════════════════════════
-
--- Check if current user has admin or superadmin role
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-STABLE
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-    AND role IN ('admin', 'superadmin')
-  );
-$$;
-
--- Check if current user has superadmin role
-CREATE OR REPLACE FUNCTION public.is_super_admin()
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-STABLE
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-    AND role = 'superadmin'
-  );
-$$;
-
-
--- ═══════════════════════════════════════════════════════════
--- SECTION 2: Tables
+-- SECTION 1: Tables (Created FIRST to satisfy dependencies)
 -- ═══════════════════════════════════════════════════════════
 
 -- 1. User Profiles & Admin Roles
---    Replaces: Firestore /roles/{uid} collection
 --    Stores administrator role assignments verified by RLS
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -60,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- 2. Courses
---    Replaces: Firestore /courses collection
+--    Catalogue of academic programs and courses
 CREATE TABLE IF NOT EXISTS public.courses (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
@@ -68,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.courses (
 );
 
 -- 3. Academic Resources
---    Replaces: Firestore /resources collection
+--    Student lecture notes, past papers, summaries, and self-tests
 CREATE TABLE IF NOT EXISTS public.resources (
   id BIGSERIAL PRIMARY KEY,
   title TEXT NOT NULL DEFAULT 'Untitled Document',
@@ -98,8 +64,7 @@ CREATE TABLE IF NOT EXISTS public.resources (
 );
 
 -- 4. Tutors
---    Replaces: Firestore /tutors collection
---    Uses TEXT primary key for the human-readable TUT-xxxx ID
+--    Peer tutor directory and profiles
 CREATE TABLE IF NOT EXISTS public.tutors (
   id TEXT PRIMARY KEY,
   tutor_id TEXT NOT NULL,
@@ -121,8 +86,7 @@ CREATE TABLE IF NOT EXISTS public.tutors (
 );
 
 -- 5. Bookings
---    Replaces: Firestore /bookings collection
---    Uses TEXT primary key for the human-readable BK-xxxx ID
+--    Peer tutoring session bookings and status tracking
 CREATE TABLE IF NOT EXISTS public.bookings (
   id TEXT PRIMARY KEY,
   tutor_id TEXT NOT NULL DEFAULT '',
@@ -154,7 +118,7 @@ CREATE TABLE IF NOT EXISTS public.bookings (
 );
 
 -- 6. Student Reviews
---    Replaces: Firestore /reviews collection
+--    Ratings and feedback for completed peer tutoring sessions
 CREATE TABLE IF NOT EXISTS public.reviews (
   id BIGSERIAL PRIMARY KEY,
   booking_id TEXT DEFAULT '',
@@ -169,7 +133,7 @@ CREATE TABLE IF NOT EXISTS public.reviews (
 );
 
 -- 7. Notifications
---    Replaces: Firestore /notifications collection
+--    Platform alerts and audit trail for administrators
 CREATE TABLE IF NOT EXISTS public.notifications (
   id BIGSERIAL PRIMARY KEY,
   type TEXT NOT NULL,
@@ -182,7 +146,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 );
 
 -- 8. Platform Settings
---    Replaces: Firestore /settings/admin document
+--    Global administrative configuration
 CREATE TABLE IF NOT EXISTS public.settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL DEFAULT '{}',
@@ -190,7 +154,6 @@ CREATE TABLE IF NOT EXISTS public.settings (
 );
 
 -- 9. Metadata / Seed Tracker
---    Replaces: Firestore /meta collection
 CREATE TABLE IF NOT EXISTS public.meta (
   key TEXT PRIMARY KEY,
   done BOOLEAN DEFAULT TRUE,
@@ -199,8 +162,44 @@ CREATE TABLE IF NOT EXISTS public.meta (
 
 
 -- ═══════════════════════════════════════════════════════════
+-- SECTION 2: Helper Functions for Row Level Security
+-- ═══════════════════════════════════════════════════════════
+
+-- Check if current user has admin or superadmin role
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid()
+    AND role IN ('admin', 'superadmin')
+  );
+END;
+$$;
+
+-- Check if current user has superadmin role
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid()
+    AND role = 'superadmin'
+  );
+END;
+$$;
+
+
+-- ═══════════════════════════════════════════════════════════
 -- SECTION 3: Row Level Security (RLS) Policies (Idempotent)
--- Mirrors the security model from firestore.rules
 -- ═══════════════════════════════════════════════════════════
 
 -- Enable RLS on all tables
