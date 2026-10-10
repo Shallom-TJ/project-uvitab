@@ -900,6 +900,10 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
   </div>
 </footer>
 
+<!-- Supabase SDK & Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1003,7 +1007,7 @@ function renderTutors() {
     const card = document.createElement('div');
     card.className = 'tutor-card';
 
-    const isOwner = t.ownerId === currentUid || !FIREBASE_READY;
+    const isOwner = t.ownerId === currentUid || !IS_BACKEND_READY;
     const tutorCourseName = t.course || t.subject || 'General Course';
 
     // Pricing badge
@@ -1462,7 +1466,7 @@ document.getElementById('editTutorForm').addEventListener('submit', async (e) =>
 function initTutorWatchers() {
   initFacultyCourseDropdowns();
 
-  if (FIREBASE_READY) {
+  if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY && typeof seedIfNeeded === 'function') {
     seedIfNeeded().then(() => {
       STORE.watchTutors(list => { tutorsCache = list; renderTutors(); });
       STORE.watchBookings(list => { bookingsCache = list; renderWorkspace(); });

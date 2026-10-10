@@ -1,6 +1,39 @@
-# Connecting VU Notes to Firebase & Secure Backend Setup
+# VU Notes — Setup & Backend Connection Guide
 
-VU Notes works as a **real-time, cross-device shared online student platform** for Victoria University Uganda. Everything uploaded or registered (documents, lecture audio, video tutorials, and peer tutor profiles) is stored live in **Firebase Storage** and **Cloud Firestore**, with a protected **Node.js/Express backend** for privileged operations (role management, payment verification, and resource moderation).
+VU Notes is a **real-time, cross-device shared student resource platform** for Victoria University Uganda. It supports both **Supabase** (recommended: PostgreSQL, Storage, Auth, Realtime, Row Level Security) and **Firebase**, with an automatic local fallback mode for offline preview.
+
+---
+
+## ⚡ Quick Supabase Setup (Recommended)
+
+### Step 1: Run the Database Schema & Storage Setup
+1. Open your [Supabase Dashboard](https://supabase.com/dashboard/project/wnxzqewpjanebtniadmj).
+2. In the left navigation, open **SQL Editor** → **New query**.
+3. Open the [supabase-schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase-schema.sql) file from this repository, copy its entire contents, paste it into the query editor, and click **Run**.
+4. This one-click SQL script automatically creates:
+   - All 9 PostgreSQL database tables (`profiles`, `courses`, `resources`, `tutors`, `bookings`, `reviews`, `notifications`, `settings`, `meta`)
+   - Complete Row Level Security (RLS) policies matching strict permissions
+   - Realtime publication on all key tables
+   - Public storage buckets (`resources` for notes/documents and `tutor-photos` for tutor avatars)
+   - Pre-seeded course catalog and platform settings (10% default commission)
+   - Database trigger for automatic user profile creation
+
+### Step 2: Configure Public Credentials
+1. In your Supabase Dashboard, go to **Project Settings (⚙️ icon) → API**.
+2. Copy the **Project URL** and **`anon` `public` key**.
+3. Open [js/supabase-config.js](file:///Users/praise/Desktop/NOTES..VU/js/supabase-config.js) and paste the Anon key:
+   ```javascript
+   var SUPABASE_URL = 'https://wnxzqewpjanebtniadmj.supabase.co';
+   var SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+   ```
+   > [!NOTE]
+   > The `anon` key is public and safe to use in frontend JavaScript. All database access and uploads are protected by Row Level Security (RLS) policies. **NEVER** expose the `service_role` (secret) key in frontend code.
+
+### Step 3: Enable Email Authentication & Create Admin User
+1. In your Supabase Dashboard, navigate to **Authentication → Providers → Email** and ensure Email/Password provider is enabled.
+2. In **Authentication → Users**, click **Add user** → **Create user** (e.g. `admin@vunotes.ac.ug`).
+3. In **Table Editor → profiles**, find the newly created user's row and change `role` from `'user'` to `'admin'` or `'superadmin'`.
+4. You can now log into `admin.html` with that administrator email and password!
 
 ---
 

@@ -419,8 +419,10 @@ const AdminAuthGate = (() => {
     btnLoading.style.display = 'inline';
 
     try {
-      if (!FIREBASE_READY) {
-        throw new Error("Firebase is not configured. Please add your Firebase credentials to js/firebase-config.js");
+      const isBackendConfigured = (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) ||
+                                  (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY);
+      if (!isBackendConfigured) {
+        throw new Error("Backend is not configured. Please paste your Supabase Anon Key in js/supabase-config.js.");
       }
       await signInAdmin(email, password);
       // Success — onAdminStateChanged will handle showing the dashboard

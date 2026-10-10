@@ -87,6 +87,9 @@ if (FIREBASE_READY) {
 }
 
 function getCurrentUserId() {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY && typeof getSupabaseUserId === 'function') {
+    return getSupabaseUserId();
+  }
   if (currentUser) return currentUser.uid;
   if (auth && auth.currentUser) return auth.currentUser.uid;
   // Fallback for edge cases during auth initialization
@@ -99,9 +102,13 @@ function getCurrentUserId() {
 }
 
 /**
- * Get current user's Firebase ID token for privileged backend requests
+ * Get current user's Auth token for privileged backend requests
  */
 async function getCurrentUserToken() {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY && supabaseClient) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    return session ? session.access_token : null;
+  }
   if (auth && auth.currentUser) {
     return await auth.currentUser.getIdToken(true);
   }
@@ -111,10 +118,13 @@ async function getCurrentUserToken() {
 /* ---------- Admin Authentication API ---------- */
 
 /**
- * Sign in as administrator using Firebase Email/Password auth.
- * After sign-in, verifies admin custom claim or Firestore role.
+ * Sign in as administrator using Email/Password auth.
+ * Dispatches to Supabase or Firebase based on active backend.
  */
 async function signInAdmin(email, password) {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY && typeof signInSupabaseAdmin === 'function') {
+    return await signInSupabaseAdmin(email, password);
+  }
   if (!auth) throw new Error("Firebase Auth is not initialized. Check your Firebase configuration.");
   const credential = await auth.signInWithEmailAndPassword(email, password);
   
@@ -139,9 +149,12 @@ async function signInAdmin(email, password) {
 }
 
 /**
- * Sign out the current admin and revert to anonymous auth.
+ * Sign out the current admin and revert to anonymous/public state.
  */
 async function signOutAdmin() {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY && typeof signOutSupabaseAdmin === 'function') {
+    return await signOutSupabaseAdmin();
+  }
   if (!auth) return;
   _isAdminUser = false;
   _isSuperAdminUser = false;
@@ -153,6 +166,9 @@ async function signOutAdmin() {
  * Check if the current user has the admin privilege.
  */
 function isAdminUser() {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) {
+    return typeof _supabaseAdminUser !== 'undefined' ? _supabaseAdminUser : false;
+  }
   return _isAdminUser;
 }
 
@@ -160,6 +176,9 @@ function isAdminUser() {
  * Check if the current user has the super admin privilege.
  */
 function isSuperAdminUser() {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) {
+    return typeof _supabaseSuperAdminUser !== 'undefined' ? _supabaseSuperAdminUser : false;
+  }
   return _isSuperAdminUser;
 }
 
@@ -167,6 +186,9 @@ function isSuperAdminUser() {
  * Get current user role string ('superadmin', 'admin', 'user').
  */
 function getAdminRole() {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) {
+    return typeof _supabaseAdminRole !== 'undefined' ? _supabaseAdminRole : 'user';
+  }
   return _adminRole;
 }
 
@@ -175,6 +197,9 @@ function getAdminRole() {
  * Callback receives (isAdmin, isSuperAdmin, role).
  */
 function onAdminStateChanged(callback) {
+  if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY && typeof onSupabaseAdminStateChanged === 'function') {
+    return onSupabaseAdminStateChanged(callback);
+  }
   _adminStateCallbacks.push(callback);
   // Fire immediately with current state
   callback(_isAdminUser, _isSuperAdminUser, _adminRole);

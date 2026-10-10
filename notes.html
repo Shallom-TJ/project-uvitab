@@ -995,6 +995,10 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
   </div>
 </footer>
 
+<!-- Supabase SDK & Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1160,7 +1164,7 @@ function renderResources(){
       when = r.createdAt.toDate ? timeAgo(r.createdAt.toDate().toISOString()) : timeAgo(r.createdAt);
     }
     
-    const isOwner = r.ownerId === currentUid || !FIREBASE_READY;
+    const isOwner = r.ownerId === currentUid || !IS_BACKEND_READY;
 
     // Detect media format
     const mType = r.mediaType || (r.resourceType === 'audio' ? 'audio' : (r.resourceType === 'video' ? 'video' : 'document'));
@@ -1567,26 +1571,21 @@ document.querySelectorAll('#categoryTabs button').forEach(b=>{
   b.classList.toggle('active', b.dataset.cat === activeCategory);
 });
 
-if(FIREBASE_READY){
-  seedIfNeeded().then(()=>{
-    STORE.watchCourses(list=>{
-      coursesCache = list;
-      renderCourseList();
-      renderResources();
-    });
-    STORE.watchResources(list=>{
-      resourcesCache = list;
-      renderCourseList();
-      renderResources();
-    });
+if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY && typeof seedIfNeeded === 'function') {
+  seedIfNeeded().then(() => {
+    initNotesWatchers();
   });
 } else {
-  STORE.watchCourses(list=>{
+  initNotesWatchers();
+}
+
+function initNotesWatchers() {
+  STORE.watchCourses(list => {
     coursesCache = list;
     renderCourseList();
     renderResources();
   });
-  STORE.watchResources(list=>{
+  STORE.watchResources(list => {
     resourcesCache = list;
     renderCourseList();
     renderResources();

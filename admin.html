@@ -1026,6 +1026,10 @@
     </div>
   </footer>
 
+  <!-- Supabase SDK & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
   <!-- Scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1487,7 +1491,15 @@
 
       try {
         let roles = [];
-        if (db) {
+        if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY && supabaseClient) {
+          const { data, error } = await supabaseClient.from('profiles').select('*');
+          roles = (data || []).map(p => ({
+            uid: p.id,
+            email: p.email,
+            role: p.role,
+            grantedBy: p.granted_by || 'Admin'
+          }));
+        } else if (db) {
           const snap = await db.collection('roles').get();
           roles = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
         }
@@ -1613,25 +1625,19 @@
 
     /* ---------- Watchers ---------- */
     function initAdminWatchers() {
-      if (FIREBASE_READY) {
-        seedIfNeeded().then(() => {
-          STORE.watchResources(list => { resourcesCache = list; renderDashboard(); });
-          STORE.watchBookings(list => { bookingsCache = list; renderDashboard(); });
-          STORE.watchTutors(list => { tutorsCache = list; renderDashboard(); });
-          STORE.watchReviews(list => { reviewsCache = list; renderDashboard(); });
-          STORE.watchNotifications(list => { notificationsCache = list; renderDashboard(); });
-          STORE.getAdminSettings().then(s => { adminSettings = s || { commissionRate: 10 }; renderDashboard(); });
-          renderSuperAdminSection();
-        });
-      } else {
-        STORE.watchResources(list => { resourcesCache = list; renderDashboard(); });
-        STORE.watchBookings(list => { bookingsCache = list; renderDashboard(); });
-        STORE.watchTutors(list => { tutorsCache = list; renderDashboard(); });
-        STORE.watchReviews(list => { reviewsCache = list; renderDashboard(); });
-        STORE.watchNotifications(list => { notificationsCache = list; renderDashboard(); });
-        adminSettings = STORE.getAdminSettings();
-        renderDashboard();
+      if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY && typeof seedIfNeeded === 'function') {
+        seedIfNeeded().catch(e => console.warn(e));
       }
+      STORE.watchResources(list => { resourcesCache = list; renderDashboard(); });
+      STORE.watchBookings(list => { bookingsCache = list; renderDashboard(); });
+      STORE.watchTutors(list => { tutorsCache = list; renderDashboard(); });
+      STORE.watchReviews(list => { reviewsCache = list; renderDashboard(); });
+      STORE.watchNotifications(list => { notificationsCache = list; renderDashboard(); });
+      Promise.resolve(STORE.getAdminSettings()).then(s => {
+        adminSettings = s || { commissionRate: 10 };
+        renderDashboard();
+      });
+      renderSuperAdminSection();
     }
 
     // Guard dashboard behind administrator verification
