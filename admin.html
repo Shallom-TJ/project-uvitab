@@ -1030,14 +1030,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
 
-  <!-- Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
-
-  <script src="js/firebase-config.js"></script>
+  <!-- Application Scripts -->
   <script src="js/app.js"></script>
   <script src="js/admin-auth.js"></script>
   <script src="js/ai-service.js"></script>
@@ -1491,7 +1484,7 @@
 
       try {
         let roles = [];
-        if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY && supabaseClient) {
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
           const { data, error } = await supabaseClient.from('profiles').select('*');
           roles = (data || []).map(p => ({
             uid: p.id,
@@ -1499,9 +1492,6 @@
             role: p.role,
             grantedBy: p.granted_by || 'Admin'
           }));
-        } else if (db) {
-          const snap = await db.collection('roles').get();
-          roles = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
         }
 
         tbody.innerHTML = '';
@@ -1535,22 +1525,13 @@
             if (confirm(`Are you sure you want to revoke administrator privileges for ${email || uid}?`)) {
               btn.disabled = true; btn.textContent = 'Revoking…';
               try {
-                const token = await getCurrentUserToken();
-                const resp = await fetch('/api/admin/set-role', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  },
-                  body: JSON.stringify({ targetUid: uid, action: 'remove' })
-                });
-
-                if (resp.ok) {
+                if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                  const { error } = await supabaseClient.from('profiles').update({ role: 'user' }).eq('id', uid);
+                  if (error) throw new Error(error.message);
                   showToast(`Administrator privileges revoked for ${email}.`);
                   renderSuperAdminSection();
                 } else {
-                  const errData = await resp.json().catch(() => ({}));
-                  throw new Error(errData.error || 'Server error: Failed to revoke administrator privileges.');
+                  throw new Error("Supabase is not connected.");
                 }
               } catch (e) {
                 console.error(e);
@@ -1584,18 +1565,15 @@
       msgEl.style.display = 'none';
 
       try {
-        const token = await getCurrentUserToken();
-        const resp = await fetch('/api/admin/set-role', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ targetEmail, role: 'admin' })
-        });
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+          const { data: matched, error: findErr } = await supabaseClient.from('profiles').select('id').eq('email', targetEmail).maybeSingle();
+          if (findErr) throw new Error(findErr.message);
+          if (!matched) throw new Error(`User with email "${targetEmail}" does not exist in profiles. Make sure they have registered an account first.`);
+          
+          const grantedBy = (typeof currentUser !== 'undefined' && currentUser && currentUser.email) ? currentUser.email : 'Super Admin';
+          const { error: updErr } = await supabaseClient.from('profiles').update({ role: 'admin', granted_by: grantedBy }).eq('id', matched.id);
+          if (updErr) throw new Error(updErr.message);
 
-        const result = await resp.json();
-        if (resp.ok) {
           msgEl.style.color = '#4ade80';
           msgEl.textContent = `✅ Successfully promoted ${targetEmail} to Administrator!`;
           msgEl.style.display = 'block';
@@ -1603,7 +1581,7 @@
           showToast(`Admin privileges granted to ${targetEmail}!`);
           renderSuperAdminSection();
         } else {
-          throw new Error(result.error || 'Failed to promote user.');
+          throw new Error("Supabase is not connected.");
         }
       } catch (err) {
         msgEl.style.color = '#ff7b88';
@@ -1625,9 +1603,6 @@
 
     /* ---------- Watchers ---------- */
     function initAdminWatchers() {
-      if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY && typeof seedIfNeeded === 'function') {
-        seedIfNeeded().catch(e => console.warn(e));
-      }
       STORE.watchResources(list => { resourcesCache = list; renderDashboard(); });
       STORE.watchBookings(list => { bookingsCache = list; renderDashboard(); });
       STORE.watchTutors(list => { tutorsCache = list; renderDashboard(); });

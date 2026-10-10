@@ -730,7 +730,7 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
       <div class="field">
         <label for="tPhoto">Profile Photo (Optional)</label>
         <input type="file" id="tPhoto" accept="image/*">
-        <p class="form-note">Image will be uploaded to Firebase Storage so students can recognize you.</p>
+        <p class="form-note">Image will be uploaded to Supabase Storage so students can recognize you.</p>
       </div>
       <div class="field">
         <label for="tBio">Tutor Description &amp; Qualifications</label>
@@ -904,15 +904,7 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-config.js"></script>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
-
 <!-- Application Scripts -->
-<script src="js/firebase-config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/ai-service.js"></script>
 
@@ -1465,18 +1457,9 @@ document.getElementById('editTutorForm').addEventListener('submit', async (e) =>
 /* ---------- Watch Tutors & Bookings from Store ---------- */
 function initTutorWatchers() {
   initFacultyCourseDropdowns();
-
-  if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY && typeof seedIfNeeded === 'function') {
-    seedIfNeeded().then(() => {
-      STORE.watchTutors(list => { tutorsCache = list; renderTutors(); });
-      STORE.watchBookings(list => { bookingsCache = list; renderWorkspace(); });
-      STORE.watchReviews(list => { reviewsCache = list; renderTutors(); });
-    });
-  } else {
-    STORE.watchTutors(list => { tutorsCache = list; renderTutors(); });
-    STORE.watchBookings(list => { bookingsCache = list; renderWorkspace(); });
-    STORE.watchReviews(list => { reviewsCache = list; renderTutors(); });
-  }
+  STORE.watchTutors(list => { tutorsCache = list; renderTutors(); });
+  STORE.watchBookings(list => { bookingsCache = list; renderWorkspace(); });
+  STORE.watchReviews(list => { reviewsCache = list; renderTutors(); });
 }
 
 initTutorWatchers();

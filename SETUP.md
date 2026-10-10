@@ -1,198 +1,121 @@
-# VU Notes — Setup & Backend Connection Guide
+# VU Notes — Setup & Supabase Backend Deployment Guide
 
-VU Notes is a **real-time, cross-device shared student resource platform** for Victoria University Uganda. It supports both **Supabase** (recommended: PostgreSQL, Storage, Auth, Realtime, Row Level Security) and **Firebase**, with an automatic local fallback mode for offline preview.
+Victoria University Notes (**VU NOTES**) is a real-time, responsive student academic resource platform built with standard HTML5, CSS3, vanilla JavaScript, and backed completely by **Supabase** (PostgreSQL database, Supabase Auth, Supabase Storage, Realtime subscriptions, and Row Level Security).
 
 ---
 
-## ⚡ Quick Supabase Setup (Recommended)
+## 🚀 Live Backend Credentials
+
+The client-side connection is already pre-configured in [js/supabase-config.js](file:///Users/praise/Desktop/NOTES..VU/js/supabase-config.js):
+
+- **Supabase Project URL**: `https://wnxzqewpjanebtniadmj.supabase.co`
+- **Publishable Key (`anon`)**: Pre-configured in `js/supabase-config.js`
+- **Frontend Architecture**: Zero dependencies required; standard ES6 JavaScript interacting directly and securely with Supabase REST and Storage APIs via `@supabase/supabase-js`.
+
+> [!NOTE]
+> The `anon` key is public by design and safe for frontend client code. All database tables and file storage buckets are strictly protected by PostgreSQL Row Level Security (RLS) policies. Privileged operations are restricted to verified administrators.
+
+---
+
+## 📋 One-Time Supabase Dashboard Setup
+
+To complete backend initialization for your Supabase project:
 
 ### Step 1: Run the Database Schema & Storage Setup
-1. Open your [Supabase Dashboard](https://supabase.com/dashboard/project/wnxzqewpjanebtniadmj).
-2. In the left navigation, open **SQL Editor** → **New query**.
-3. Open the [supabase-schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase-schema.sql) file from this repository, copy its entire contents, paste it into the query editor, and click **Run**.
-4. This one-click SQL script automatically creates:
-   - All 9 PostgreSQL database tables (`profiles`, `courses`, `resources`, `tutors`, `bookings`, `reviews`, `notifications`, `settings`, `meta`)
-   - Complete Row Level Security (RLS) policies matching strict permissions
-   - Realtime publication on all key tables
-   - Public storage buckets (`resources` for notes/documents and `tutor-photos` for tutor avatars)
-   - Pre-seeded course catalog and platform settings (10% default commission)
-   - Database trigger for automatic user profile creation
+1. Log in to your [Supabase Dashboard](https://supabase.com/dashboard/project/wnxzqewpjanebtniadmj).
+2. In the left sidebar, click **SQL Editor** → **New query**.
+3. Open [supabase-schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase-schema.sql) from this repository, copy its entire contents, paste it into the editor, and click **Run**.
+4. This script executes idempotently and automatically provisions:
+   - **9 PostgreSQL Database Tables**:
+     - `profiles`: User accounts, administrator and superadmin role assignments
+     - `courses`: Academic courses and programs catalogue
+     - `resources`: Academic notes, past papers, lecture slides, syllabus documents
+     - `tutors`: Peer tutor directory and contact details
+     - `bookings`: Student session bookings, payment references, and earnings calculations
+     - `reviews`: Student star ratings and verified feedback
+     - `notifications`: Real-time administrative activity feed
+     - `settings`: Platform configuration (default 10% commission rate)
+     - `meta`: Seed execution tracker
+   - **Row Level Security (RLS)**: Enforces public access rules, restricts file deletion and moderation to administrators, and ensures student private data is protected.
+   - **Realtime Subscriptions**: Enables instant multi-device live updates across all interactive tables.
+   - **Storage Buckets**: Idempotently registers `resources` (150 MB file limit) and `tutor-photos` (10 MB image limit) with public read permissions.
+   - **Database Triggers**: Automatically syncs newly registered authentication users into `public.profiles`.
 
-### Step 2: Configure Public Credentials
-1. In your Supabase Dashboard, go to **Project Settings (⚙️ icon) → API**.
-2. Copy the **Project URL** and **`anon` `public` key**.
-3. Open [js/supabase-config.js](file:///Users/praise/Desktop/NOTES..VU/js/supabase-config.js) and paste the Anon key:
-   ```javascript
-   var SUPABASE_URL = 'https://wnxzqewpjanebtniadmj.supabase.co';
-   var SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+---
+
+### Step 2: Enable Email Authentication & Create Your Administrator Account
+1. In your Supabase Dashboard, go to **Authentication** → **Providers** → **Email**:
+   - Ensure the **Email** provider is toggled **ON**.
+   - Ensure **Confirm email** is set according to your preference (for instant admin login during school demonstrations, you can turn off "Confirm email").
+2. Go to **Authentication** → **Users** → click **Add user** → **Create user**:
+   - Enter your administrator email (e.g. `admin@vu.ac.ug`).
+   - Enter a secure password.
+3. In **SQL Editor**, run the following query to promote this account to Super Administrator:
+   ```sql
+   UPDATE public.profiles
+   SET role = 'superadmin'
+   WHERE email = 'admin@vu.ac.ug';
    ```
-   > [!NOTE]
-   > The `anon` key is public and safe to use in frontend JavaScript. All database access and uploads are protected by Row Level Security (RLS) policies. **NEVER** expose the `service_role` (secret) key in frontend code.
-
-### Step 3: Enable Email Authentication & Create Admin User
-1. In your Supabase Dashboard, navigate to **Authentication → Providers → Email** and ensure Email/Password provider is enabled.
-2. In **Authentication → Users**, click **Add user** → **Create user** (e.g. `admin@vunotes.ac.ug`).
-3. In **Table Editor → profiles**, find the newly created user's row and change `role` from `'user'` to `'admin'` or `'superadmin'`.
-4. You can now log into `admin.html` with that administrator email and password!
+4. You can now open `admin.html` and sign in through the verified Administrator Authentication Gate!
 
 ---
 
-## Architecture Overview: Frontend vs. Backend Separation
+## 💻 Running the Website Locally
 
-```
-[ BROWSER CLIENT (Public) ]
-  ├── index.html, notes.html, tutors.html, admin.html
-  ├── js/firebase-config.js (Public Web Config: apiKey, projectId, etc.)
-  ├── js/app.js, js/ai-monitor.js, js/admin-auth.js
-  └── Direct secure reads/writes governed strictly by Firestore & Storage Security Rules
+Since VU Notes is built with modern vanilla HTML, CSS, and JavaScript, no build step or node package compilation is required:
 
-[ NODE.JS BACKEND (Private & Privileged) ]
-  ├── server/server.js (Express API with Firebase Admin SDK)
-  ├── server/.env (NEVER committed to Git — holds private credentials)
-  └── Performs privileged role assignment, resource moderation & payment verification
-```
-
----
-
-## 1. Firebase Project Setup
-1. Go to [https://console.firebase.google.com](https://console.firebase.google.com) and create or select your project.
-2. In **Build → Authentication → Sign-in method**:
-   - Enable **Email/Password** (for administrator login).
-   - Enable **Anonymous** (for zero-friction student visitor session tracking).
-3. In **Build → Firestore Database**:
-   - Create your database.
-   - Go to the **Rules** tab and paste the contents of [firestore.rules](file:///Users/praise/Desktop/NOTES..VU/firestore.rules). Click **Publish**.
-4. In **Build → Storage**:
-   - Enable Cloud Storage.
-   - Go to the **Rules** tab and paste the contents of [storage.rules](file:///Users/praise/Desktop/NOTES..VU/storage.rules). Click **Publish**.
-
----
-
-## 2. Frontend Configuration (Public Web Client)
-1. On your Firebase project dashboard, click the **Web (`</>`)** icon to register your web application.
-2. Copy the web config object into [js/firebase-config.js](file:///Users/praise/Desktop/NOTES..VU/js/firebase-config.js):
-   ```javascript
-   const firebaseConfig = {
-     apiKey: "AIzaSy...",
-     authDomain: "your-project-id.firebaseapp.com",
-     projectId: "your-project-id",
-     storageBucket: "your-project-id.appspot.com",
-     messagingSenderId: "...",
-     appId: "..."
-   };
-   ```
-   *(Note: These public web keys are safe in frontend code because all reads and writes are strictly enforced by Firestore and Storage security rules).*
-
----
-
-## 3. Backend Environment Variables & Credentials Setup (Private)
-
-All privileged secrets (service account private keys, admin API tokens) **MUST NEVER** be placed in frontend code or committed to GitHub.
-
-### Step 3.1: Obtain Firebase Service Account Credentials
-1. In Firebase Console, go to **Project Settings (⚙️ icon) → Service accounts**.
-2. Under "Firebase Admin SDK", click **Generate new private key**.
-3. A JSON file will download.
-
-### Step 3.2: Configure `server/.env`
-1. Navigate to the `server/` directory:
-   ```bash
-   cd server
-   cp .env.example .env
-   ```
-2. Open `server/.env` in your editor and configure your credentials using **either** of these methods:
-
-#### Method A: Direct Environment Variables (Recommended for Production & Cloud Hosts)
-Open your downloaded JSON key file and copy the values into `server/.env`:
-```env
-PORT=5001
-NODE_ENV=development
-
-FIREBASE_PROJECT_ID="your-project-id"
-FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@your-project-id.iam.gserviceaccount.com"
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...\n-----END PRIVATE KEY-----\n"
-
-ADMIN_EMAIL="admin@vunotes.ac.ug"
-```
-
-#### Method B: Local File Reference (Convenient for Local Machine Development)
-Move the downloaded JSON file into `server/serviceAccountKey.json` and configure `server/.env`:
-```env
-PORT=5001
-NODE_ENV=development
-
-FIREBASE_SERVICE_ACCOUNT_PATH="./serviceAccountKey.json"
-ADMIN_EMAIL="admin@vunotes.ac.ug"
-```
-
-> [!IMPORTANT]
-> The project `.gitignore` already protects `.env`, `server/.env`, `*serviceAccountKey*.json`, `*.pem`, and all credential files from ever being tracked or committed to Git.
-
-### Step 3.3: Install Backend Dependencies & Start Server
+### Option A: Using Python (macOS built-in)
 ```bash
-cd server
-npm install
-npm start
+cd "/Users/praise/Desktop/NOTES..VU"
+python3 -m http.server 8080
 ```
-The server will start on port `5001` and log:
+Open [http://localhost:8080](http://localhost:8080) in your web browser.
+
+### Option B: Using Node.js / npx
+```bash
+npx -y serve . -p 8080
 ```
-✅ Firebase Admin SDK successfully initialized.
-🚀 VU Notes Backend running on port 5001
+
+### Option C: Direct Browser Opening
+Double-click `index.html` to open it in Chrome, Safari, or Edge.
+
+---
+
+## 🌐 Website Pages & Capabilities
+
+| Page | Description | Supabase Services Used |
+|---|---|---|
+| [index.html](file:///Users/praise/Desktop/NOTES..VU/index.html) | Main Landing Page, hero section, statistics, quick search, featured notes | Supabase Client initialization, real-time metrics |
+| [notes.html](file:///Users/praise/Desktop/NOTES..VU/notes.html) | Academic resource repository with category tabs, search, faculty & course filters, and file upload modal | `resources` table, Supabase Storage (`resources` bucket), Realtime sync |
+| [tutors.html](file:///Users/praise/Desktop/NOTES..VU/tutors.html) | Peer tutor directory, tutor registration form with photo upload, tutor booking modal, and personal student workspace | `tutors`, `bookings`, `reviews` tables, Supabase Storage (`tutor-photos` bucket) |
+| [admin.html](file:///Users/praise/Desktop/NOTES..VU/admin.html) | Restricted Administrator Governance Portal with resource moderation queue, booking verification, tutor management, platform settings, and superadmin role delegations | Supabase Auth (`signInWithPassword`), `profiles` role check, RLS administrative actions |
+
+---
+
+## 🚢 Deploying to Production
+
+You can deploy Victoria University Notes to any static hosting provider for free:
+
+### Deploy to GitHub Pages
+1. Push your repository to GitHub (`main` branch).
+2. Go to repository **Settings** → **Pages**.
+3. Under **Branch**, select `main` and `/ (root)`, then click **Save**.
+4. Your site will be live at `https://<your-username>.github.io/<repo-name>/`.
+
+### Deploy to Vercel
+```bash
+npx vercel --prod
+```
+
+### Deploy to Netlify
+```bash
+npx netlify deploy --prod --dir=.
 ```
 
 ---
 
-## 4. Granting Admin Access to Your Account
-To log into `admin.html`, your account must have the `{ admin: true, role: 'admin' }` custom claim.
+## 🔒 Security Summary
 
-1. Create your administrator account in **Firebase Console → Authentication → Users → Add user** (e.g. `admin@vunotes.ac.ug`).
-2. Run the included claim assignment script from the project root:
-   ```bash
-   node scripts/set-admin-claim.js admin@vunotes.ac.ug
-   ```
-   *(The script automatically reads credentials from `server/.env` or you can pass `./server/serviceAccountKey.json` as the first argument).*
-3. The script sets the Firebase Custom User Claim and creates a verified record in `/roles/{uid}`.
-
----
-
-## 5. Summary of Environment Variables
-
-| Variable Name | Required? | Description | Where It Belongs |
-|---|---|---|---|
-| `PORT` | Optional | Port for the backend API (Default: `5001`) | `server/.env` |
-| `NODE_ENV` | Optional | `development` or `production` | `server/.env` |
-| `FIREBASE_PROJECT_ID` | Yes (Method A) | Project ID from Firebase Console | `server/.env` (Server only) |
-| `FIREBASE_CLIENT_EMAIL` | Yes (Method A) | Client email from Service Account JSON | `server/.env` (Server only) |
-| `FIREBASE_PRIVATE_KEY` | Yes (Method A) | RSA Private Key from Service Account JSON | `server/.env` (Server only) |
-| `FIREBASE_SERVICE_ACCOUNT_PATH` | Yes (Method B) | Local path to JSON key file (e.g. `./serviceAccountKey.json`) | `server/.env` (Server only) |
-| `ADMIN_EMAIL` | Optional | Default administrator email address | `server/.env` |
-
----
-
-## 6. AI Backend Service (Firebase Cloud Functions + Google Genkit)
-
-VU Notes integrates a secure serverless AI backend powered by **Google Genkit** and **Firebase Cloud Functions (2nd Gen)** for academic chat assistance, concept explanations, and curriculum support.
-
-### Architecture & Security
-- **Cloud Function**: `chatWithAI` callable function in `functions/index.js`.
-- **Server-Side Secret**: The Gemini API key is stored strictly inside **Google Cloud Secret Manager** via Firebase Secrets. It is NEVER exposed to client browsers or stored in Git.
-- **Client SDK**: Frontend interacts via `AIService.sendMessage(message, context)` in `js/ai-service.js`, which uses `firebase.functions().httpsCallable('chatWithAI')` to automatically include verified user authentication.
-
-### Step 6.1: Configure Firebase Secret
-Get an API key from [Google AI Studio](https://aistudio.google.com/app/apikey) and set it securely in Firebase:
-```bash
-firebase functions:secrets:set GEMINI_API_KEY
-```
-*(When prompted, paste your Gemini API key).*
-
-### Step 6.2: Install Functions Dependencies
-```bash
-cd functions
-npm install
-cd ..
-```
-
-### Step 6.3: Deploy AI Cloud Functions
-```bash
-firebase deploy --only functions
-```
+- **No Exposed Secrets**: No Supabase `service_role` key, database master password, or private credentials are in frontend JavaScript.
+- **Row Level Security**: Non-admin visitors can only insert pending resources and bookings. Only verified administrators with `role = 'admin'` or `'superadmin'` can approve submissions, update platform settings, or grant admin permissions.
+- **Data Persistence**: All student notes, past papers, bookings, and reviews persist in PostgreSQL on Supabase Cloud.

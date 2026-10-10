@@ -1,7 +1,7 @@
 /* =========================================================
    VU NOTES — Admin Authentication Gate
-   Provides login UI and guards admin.html behind Firebase
-   Email/Password authentication with custom admin claim.
+   Provides login UI and guards admin.html behind Supabase
+   Email/Password authentication with verified profile role.
    ========================================================= */
 
 const AdminAuthGate = (() => {
@@ -38,7 +38,7 @@ const AdminAuthGate = (() => {
         }
       });
     } else {
-      // Firebase not ready
+      // Supabase not ready
       _showLogin();
     }
   }
@@ -419,10 +419,8 @@ const AdminAuthGate = (() => {
     btnLoading.style.display = 'inline';
 
     try {
-      const isBackendConfigured = (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) ||
-                                  (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY);
-      if (!isBackendConfigured) {
-        throw new Error("Backend is not configured. Please paste your Supabase Anon Key in js/supabase-config.js.");
+      if (!SUPABASE_READY) {
+        throw new Error("Supabase is not configured. Please paste your Supabase Anon Key in js/supabase-config.js.");
       }
       await signInAdmin(email, password);
       // Success — onAdminStateChanged will handle showing the dashboard

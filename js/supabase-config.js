@@ -58,6 +58,7 @@ if (SUPABASE_READY) {
  * Check if the user has an admin/superadmin role in the profiles table.
  */
 async function _checkSupabaseRole(user) {
+  _syncGlobalCurrentUser();
   if (!user || !supabaseClient) {
     _supabaseAdminUser = false;
     _supabaseSuperAdminUser = false;
@@ -185,3 +186,40 @@ function onSupabaseAdminStateChanged(callback) {
   _supabaseAdminCallbacks.push(callback);
   callback(_supabaseAdminUser, _supabaseSuperAdminUser, _supabaseAdminRole);
 }
+
+/* ---------- Global Canonical Auth API (Universal Interface) ---------- */
+
+var currentUser = null;
+
+function _syncGlobalCurrentUser() {
+  if (_supabaseCurrentUser) {
+    currentUser = {
+      id: _supabaseCurrentUser.id,
+      uid: _supabaseCurrentUser.id,
+      email: _supabaseCurrentUser.email || '',
+      user_metadata: _supabaseCurrentUser.user_metadata || {}
+    };
+  } else {
+    currentUser = null;
+  }
+}
+
+function getCurrentUserId() {
+  return getSupabaseUserId();
+}
+
+async function getCurrentUserToken() {
+  if (supabaseClient) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    return session ? session.access_token : null;
+  }
+  return null;
+}
+
+const signInAdmin = signInSupabaseAdmin;
+const signOutAdmin = signOutSupabaseAdmin;
+function isAdminUser() { return _supabaseAdminUser; }
+function isSuperAdminUser() { return _supabaseSuperAdminUser; }
+function getAdminRole() { return _supabaseAdminRole; }
+const onAdminStateChanged = onSupabaseAdminStateChanged;
+

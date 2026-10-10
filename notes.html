@@ -999,15 +999,7 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-config.js"></script>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
-
 <!-- Application Scripts -->
-<script src="js/firebase-config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/ai-monitor.js"></script>
 <script src="js/ai-service.js"></script>
@@ -1239,7 +1231,7 @@ function renderResources(){
       const storagePath = btn.dataset.path;
       const ownerId = btn.dataset.owner;
 
-      if (confirm("Are you sure you want to delete this resource? This will remove the file from Firebase Storage and Firestore.")) {
+      if (confirm("Are you sure you want to delete this resource? This will remove the file from storage and database.")) {
         btn.disabled = true;
         btn.textContent = 'Deleting…';
         try {
@@ -1571,13 +1563,7 @@ document.querySelectorAll('#categoryTabs button').forEach(b=>{
   b.classList.toggle('active', b.dataset.cat === activeCategory);
 });
 
-if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY && typeof seedIfNeeded === 'function') {
-  seedIfNeeded().then(() => {
-    initNotesWatchers();
-  });
-} else {
-  initNotesWatchers();
-}
+initNotesWatchers();
 
 function initNotesWatchers() {
   STORE.watchCourses(list => {

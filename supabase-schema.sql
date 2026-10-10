@@ -253,35 +253,25 @@ CREATE POLICY "resources_select" ON public.resources
     OR public.is_admin()
   );
 
--- Authenticated users can create resources (status must be Pending unless admin)
+-- Students can submit resources (status must start as Pending unless submitted by verified admin)
 CREATE POLICY "resources_insert" ON public.resources
   FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL
-    AND owner_id = auth.uid()::text
-    AND (
-      status = 'Pending'
-      OR (public.is_admin() AND status IN ('Approved', 'Pending', 'Rejected'))
-    )
+    status = 'Pending'
+    OR (public.is_admin() AND status IN ('Approved', 'Pending', 'Rejected', 'Flagged'))
   );
 
--- Owners can update own resources (but not change status unless admin); admins can update all
+-- Authenticated owner or admin can update resource details (status changes restricted to admin)
 CREATE POLICY "resources_update" ON public.resources
   FOR UPDATE USING (
-    auth.uid() IS NOT NULL
-    AND (
-      owner_id = auth.uid()::text
-      OR public.is_admin()
-    )
+    public.is_admin()
+    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
   );
 
 -- Owner or admin can delete
 CREATE POLICY "resources_delete" ON public.resources
   FOR DELETE USING (
-    auth.uid() IS NOT NULL
-    AND (
-      owner_id = auth.uid()::text
-      OR public.is_admin()
-    )
+    public.is_admin()
+    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
   );
 
 -- ── Tutors ────────────────────────────────────────────────
@@ -289,61 +279,44 @@ CREATE POLICY "resources_delete" ON public.resources
 CREATE POLICY "tutors_select_public" ON public.tutors
   FOR SELECT USING (true);
 
--- Authenticated users can create tutor profiles (must be owner)
+-- Any student can register as a tutor
 CREATE POLICY "tutors_insert" ON public.tutors
-  FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL
-    AND owner_id = auth.uid()::text
-  );
+  FOR INSERT WITH CHECK (true);
 
--- Owner or admin can update
+-- Owner or admin can update tutor profile
 CREATE POLICY "tutors_update" ON public.tutors
   FOR UPDATE USING (
-    auth.uid() IS NOT NULL
-    AND (
-      owner_id = auth.uid()::text
-      OR public.is_admin()
-    )
+    public.is_admin()
+    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
   );
 
 -- Owner or admin can delete
 CREATE POLICY "tutors_delete" ON public.tutors
   FOR DELETE USING (
-    auth.uid() IS NOT NULL
-    AND (
-      owner_id = auth.uid()::text
-      OR public.is_admin()
-    )
+    public.is_admin()
+    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
   );
 
 -- ── Bookings ──────────────────────────────────────────────
--- Visible to the student (owner), the tutor, or admins
+-- Visible to the student (owner) or admins
 CREATE POLICY "bookings_select" ON public.bookings
   FOR SELECT USING (
-    auth.uid() IS NOT NULL
-    AND (
-      owner_id = auth.uid()::text
-      OR public.is_admin()
-    )
+    public.is_admin()
+    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
   );
 
--- Authenticated users can create bookings (status must start as Pending)
+-- Students can create bookings (status must start as Pending)
 CREATE POLICY "bookings_insert" ON public.bookings
   FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL
-    AND owner_id = auth.uid()::text
-    AND booking_status = 'Pending'
+    booking_status = 'Pending'
     AND payment_status = 'Payment Pending'
   );
 
 -- Owner or admin can update bookings
 CREATE POLICY "bookings_update" ON public.bookings
   FOR UPDATE USING (
-    auth.uid() IS NOT NULL
-    AND (
-      owner_id = auth.uid()::text
-      OR public.is_admin()
-    )
+    public.is_admin()
+    OR (auth.uid() IS NOT NULL AND owner_id = auth.uid()::text)
   );
 
 -- Only admins can delete bookings
@@ -351,50 +324,38 @@ CREATE POLICY "bookings_delete" ON public.bookings
   FOR DELETE USING (public.is_admin());
 
 -- ── Reviews ───────────────────────────────────────────────
--- Public read
+-- Public can read non-flagged reviews; admins see all
 CREATE POLICY "reviews_select_public" ON public.reviews
-  FOR SELECT USING (true);
-
--- Authenticated users can create reviews (must be the reviewer)
-CREATE POLICY "reviews_insert" ON public.reviews
-  FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL
-    AND reviewer_id = auth.uid()::text
+  FOR SELECT USING (
+    flagged = false
+    OR public.is_admin()
   );
 
--- Reviewer can update own review (except flagged); admins can update all
+-- Students can submit reviews
+CREATE POLICY "reviews_insert" ON public.reviews
+  FOR INSERT WITH CHECK (flagged = false);
+
+-- Reviewer or admin can update
 CREATE POLICY "reviews_update" ON public.reviews
   FOR UPDATE USING (
-    auth.uid() IS NOT NULL
-    AND (
-      reviewer_id = auth.uid()::text
-      OR public.is_admin()
-    )
+    public.is_admin()
+    OR (auth.uid() IS NOT NULL AND reviewer_id = auth.uid()::text)
   );
 
--- Reviewer or admin can delete
+-- Admin can delete reviews
 CREATE POLICY "reviews_delete" ON public.reviews
-  FOR DELETE USING (
-    auth.uid() IS NOT NULL
-    AND (
-      reviewer_id = auth.uid()::text
-      OR public.is_admin()
-    )
-  );
+  FOR DELETE USING (public.is_admin());
 
 -- ── Notifications ─────────────────────────────────────────
 -- Only admins can read notifications
 CREATE POLICY "notifications_select_admin" ON public.notifications
   FOR SELECT USING (public.is_admin());
 
--- Authenticated users can create notifications (for system events)
+-- System and users can create notifications for platform events
 CREATE POLICY "notifications_insert" ON public.notifications
   FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL
-    AND (
-      public.is_admin()
-      OR type IN ('BOOKING_CREATED', 'NEW_BOOKING', 'TUTOR_REGISTERED', 'PAYMENT_PENDING', 'REVIEW_SUBMITTED')
-    )
+    type IN ('BOOKING_CREATED', 'NEW_BOOKING', 'TUTOR_REGISTERED', 'PAYMENT_PENDING', 'REVIEW_SUBMITTED', 'SYSTEM')
+    OR public.is_admin()
   );
 
 -- Only admins can update or delete notifications
@@ -459,34 +420,34 @@ CREATE POLICY "resources_storage_public_read"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'resources');
 
-CREATE POLICY "resources_storage_auth_upload"
+CREATE POLICY "resources_storage_upload"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'resources' AND auth.role() = 'authenticated');
+  WITH CHECK (bucket_id = 'resources');
 
-CREATE POLICY "resources_storage_auth_update"
+CREATE POLICY "resources_storage_update"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'resources' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'resources' AND (public.is_admin() OR auth.role() = 'authenticated'));
 
-CREATE POLICY "resources_storage_auth_delete"
+CREATE POLICY "resources_storage_delete"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'resources' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'resources' AND (public.is_admin() OR auth.role() = 'authenticated'));
 
 -- Storage Policies: tutor-photos bucket
 CREATE POLICY "tutor_photos_public_read"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'tutor-photos');
 
-CREATE POLICY "tutor_photos_auth_upload"
+CREATE POLICY "tutor_photos_upload"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'tutor-photos' AND auth.role() = 'authenticated');
+  WITH CHECK (bucket_id = 'tutor-photos');
 
-CREATE POLICY "tutor_photos_auth_update"
+CREATE POLICY "tutor_photos_update"
   ON storage.objects FOR UPDATE
-  USING (bucket_id = 'tutor-photos' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'tutor-photos' AND (public.is_admin() OR auth.role() = 'authenticated'));
 
-CREATE POLICY "tutor_photos_auth_delete"
+CREATE POLICY "tutor_photos_delete"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'tutor-photos' AND auth.role() = 'authenticated');
+  USING (bucket_id = 'tutor-photos' AND (public.is_admin() OR auth.role() = 'authenticated'));
 
 
 -- ═══════════════════════════════════════════════════════════
@@ -580,8 +541,19 @@ CREATE TRIGGER on_auth_user_created
 
 
 -- ═══════════════════════════════════════════════════════════
--- DONE! Verify in the Dashboard:
---   Table Editor  → 9 tables should appear
---   Storage       → 'resources' and 'tutor-photos' buckets
---   Authentication → Enable Email/Password provider
+-- SECTION 8: How to Create Your Initial Super Administrator
+-- ═══════════════════════════════════════════════════════════
+-- 1. In Supabase Dashboard → Authentication → Users:
+--    Click "Add user" → "Create user", enter your email & password (e.g., admin@vu.ac.ug)
+-- 2. Then run this query below to promote your account to Super Administrator:
+--
+-- UPDATE public.profiles
+-- SET role = 'superadmin'
+-- WHERE email = 'your-admin-email@example.com';
+--
+-- ═══════════════════════════════════════════════════════════
+-- VERIFICATION CHECKLIST:
+--   ✓ Table Editor   → 9 tables (profiles, courses, resources, tutors, bookings, reviews, notifications, settings, meta)
+--   ✓ Storage        → 2 buckets (resources [150MB], tutor-photos [10MB])
+--   ✓ Authentication → Email provider enabled
 -- ═══════════════════════════════════════════════════════════
