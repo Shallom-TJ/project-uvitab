@@ -578,7 +578,8 @@ CREATE POLICY "settings_select_public" ON public.settings
   FOR SELECT TO public
   USING (true);
 
-DROP POLICY IF EXISTS "settings_manage_admin" ON public.settings
+DROP POLICY IF EXISTS "settings_manage_admin" ON public.settings;
+CREATE POLICY "settings_manage_admin" ON public.settings
   FOR ALL TO authenticated
   USING (public.is_admin());
 
@@ -588,7 +589,8 @@ CREATE POLICY "meta_select_public" ON public.meta
   FOR SELECT TO public
   USING (true);
 
-DROP POLICY IF EXISTS "meta_manage_admin" ON public.meta
+DROP POLICY IF EXISTS "meta_manage_admin" ON public.meta;
+CREATE POLICY "meta_manage_admin" ON public.meta
   FOR ALL TO authenticated
   USING (public.is_admin());
 
@@ -690,7 +692,7 @@ CREATE POLICY "resources_storage_update_owner_admin"
   TO authenticated
   USING (
     bucket_id = 'resources'
-    AND (owner = auth.uid() OR public.is_admin())
+    AND (owner::text = auth.uid()::text OR public.is_admin())
   );
 
 DROP POLICY IF EXISTS "resources_storage_delete_owner_admin" ON storage.objects;
@@ -699,7 +701,7 @@ CREATE POLICY "resources_storage_delete_owner_admin"
   TO authenticated
   USING (
     bucket_id = 'resources'
-    AND (owner = auth.uid() OR public.is_admin())
+    AND (owner::text = auth.uid()::text OR public.is_admin())
   );
 
 -- 3. Storage Object Policies: tutor-photos
@@ -721,7 +723,7 @@ CREATE POLICY "tutor_photos_update_owner_admin"
   TO authenticated
   USING (
     bucket_id = 'tutor-photos'
-    AND (owner = auth.uid() OR public.is_admin())
+    AND (owner::text = auth.uid()::text OR public.is_admin())
   );
 
 DROP POLICY IF EXISTS "tutor_photos_delete_owner_admin" ON storage.objects;
@@ -730,7 +732,7 @@ CREATE POLICY "tutor_photos_delete_owner_admin"
   TO authenticated
   USING (
     bucket_id = 'tutor-photos'
-    AND (owner = auth.uid() OR public.is_admin())
+    AND (owner::text = auth.uid()::text OR public.is_admin())
   );
 
 
