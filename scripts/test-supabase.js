@@ -72,30 +72,27 @@ async function runTests() {
   // 3. Storage Buckets Verification
   console.log('\nSTEP 3: Verifying Supabase Storage Buckets...');
   let storageReady = true;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/bucket`, { headers: HEADERS });
-    if (res.ok) {
-      const buckets = await res.json();
-      const bucketIds = Array.isArray(buckets) ? buckets.map(b => b.id) : [];
-      const reqBuckets = ['resources', 'tutor-photos'];
-      for (const reqB of reqBuckets) {
-        if (bucketIds.includes(reqB)) {
-          console.log(`  ✅ Bucket '${reqB}': Exists in Supabase Storage.`);
-        } else {
-          console.error(`  ❌ Bucket '${reqB}': NOT FOUND in Supabase Storage (Current buckets: ${bucketIds.join(', ') || 'none'}).`);
-          storageReady = false;
-          allPassed = false;
-        }
+  const reqBuckets = ['resources', 'tutor-photos'];
+  for (const reqB of reqBuckets) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${reqB}`, {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify({ prefix: '', limit: 1 })
+      });
+      if (res.ok) {
+        console.log(`  ✅ Bucket '${reqB}': Exists and accessible in Supabase Storage.`);
+      } else {
+        const errText = await res.text();
+        console.error(`  ❌ Bucket '${reqB}': Error accessing bucket (HTTP ${res.status}): ${errText}`);
+        storageReady = false;
+        allPassed = false;
       }
-    } else {
-      console.error(`  ❌ Storage API returned HTTP ${res.status}`);
+    } catch (e) {
+      console.error(`  ❌ Bucket '${reqB}': Network error: ${e.message}`);
       storageReady = false;
       allPassed = false;
     }
-  } catch (e) {
-    console.error(`  ❌ Error querying storage buckets: ${e.message}`);
-    storageReady = false;
-    allPassed = false;
   }
 
   if (!tablesReady) {
