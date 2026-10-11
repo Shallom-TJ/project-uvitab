@@ -614,32 +614,12 @@ VALUES (
   'resources',
   true,
   157286400, -- 150 MiB limit
-  ARRAY[
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain',
-    'text/csv',
-    'application/rtf',
-    'audio/mpeg',
-    'audio/wav',
-    'audio/mp4',
-    'audio/aac',
-    'audio/ogg',
-    'video/mp4',
-    'video/webm',
-    'video/ogg',
-    'video/quicktime'
-  ]
+  NULL
 )
 ON CONFLICT (id) DO UPDATE SET
   public = EXCLUDED.public,
   file_size_limit = EXCLUDED.file_size_limit,
-  allowed_mime_types = EXCLUDED.allowed_mime_types;
+  allowed_mime_types = NULL;
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
@@ -647,12 +627,12 @@ VALUES (
   'tutor-photos',
   true,
   10485760, -- 10 MiB limit
-  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  NULL
 )
 ON CONFLICT (id) DO UPDATE SET
   public = EXCLUDED.public,
   file_size_limit = EXCLUDED.file_size_limit,
-  allowed_mime_types = EXCLUDED.allowed_mime_types;
+  allowed_mime_types = NULL;
 
 -- 2. Storage Object Policies: resources
 DROP POLICY IF EXISTS "resources_storage_public_read" ON storage.objects;

@@ -979,7 +979,7 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
         <strong>📋 Academic Content Policy:</strong> Your file will be checked for academic relevance and UVTAB course compatibility before being published to the shared folder. Only educational resources are accepted.
       </div>
 
-      <button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn" disabled>
+      <button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">
         ⬆ Add to Shared Folder
       </button>
       <p class="form-note" id="uploadSubmitNote" style="text-align:center;margin-top:8px;">Select a file above to begin the academic content check.</p>
@@ -1402,35 +1402,56 @@ function showAiResult(result){
   } else if(result.status === 'mismatch'){
     resultEl.classList.add('ai-result-mismatch');
     icon.textContent = '🟡';
-    title.textContent = '⚠️ Content Mismatch Detected';
+    title.textContent = '⚠️ Advisory: Course Match Verification';
     msg.textContent = result.message;
     details.textContent = result.details;
     confFill.classList.add('mismatch');
     mismatchActions.style.display = 'flex';
-    submitBtn.disabled = true;
-    submitNote.textContent = 'Please verify the correct course is selected before uploading.';
-    step2.className = 'upload-step active';
+    submitBtn.disabled = false;
+    submitNote.textContent = 'You may verify the course selection above, or proceed to upload for faculty review.';
+    step2.className = 'upload-step done';
+    step2.querySelector('.upload-step-num').textContent = '✓';
+    step3.className = 'upload-step active';
   } else if(result.status === 'rejected'){
-    resultEl.classList.add('ai-result-rejected');
-    icon.textContent = '🔴';
-    title.textContent = '❌ Upload Rejected';
-    msg.textContent = result.message;
-    details.textContent = result.details;
-    confFill.classList.add('rejected');
-    submitBtn.disabled = true;
-    submitNote.textContent = 'This file does not appear to contain relevant academic material for the selected course. Please upload an appropriate educational resource.';
-    step2.className = 'upload-step active';
+    const isExplicitlyBad = (result.message || '').includes('non-academic') || (result.message || '').includes('inappropriate');
+    if (isExplicitlyBad) {
+      resultEl.classList.add('ai-result-rejected');
+      icon.textContent = '🔴';
+      title.textContent = '❌ Upload Blocked';
+      msg.textContent = result.message;
+      details.textContent = result.details;
+      confFill.classList.add('rejected');
+      submitBtn.disabled = true;
+      submitNote.textContent = 'This file contains non-academic material and cannot be uploaded.';
+      step2.className = 'upload-step active';
+      currentAiStatus = 'rejected';
+    } else {
+      // Inconclusive scan (compressed PDF, scanned document, or new course)
+      resultEl.classList.add('ai-result-mismatch');
+      icon.textContent = '🟡';
+      title.textContent = '📋 Course Verification Pending';
+      msg.textContent = 'Automated keyword scan was inconclusive. Your resource will be submitted for faculty moderation.';
+      details.textContent = result.details || 'Uploaded files are reviewed by student moderators before being listed publicly.';
+      confFill.classList.add('mismatch');
+      submitBtn.disabled = false;
+      submitNote.textContent = 'Ready to upload! Resource will be submitted as Pending for review.';
+      step2.className = 'upload-step done';
+      step2.querySelector('.upload-step-num').textContent = '✓';
+      step3.className = 'upload-step active';
+      currentAiStatus = 'pending_review';
+    }
   } else {
     resultEl.classList.add('ai-result-error');
-    icon.textContent = '⚠️';
-    title.textContent = 'Content Check Unavailable';
-    msg.textContent = result.message || 'Could not analyse this file.';
-    details.textContent = 'You may still try to upload — please ensure the file is a UVTAB academic resource.';
-    confFill.style.width = '0%';
+    icon.textContent = 'ℹ️';
+    title.textContent = 'Ready for Upload';
+    msg.textContent = result.message || 'Educational resource ready for submission.';
+    details.textContent = 'Your file will be uploaded to Supabase Storage and reviewed by course moderators.';
+    confFill.style.width = '100%';
     submitBtn.disabled = false;
-    submitNote.textContent = 'Content check skipped. Please ensure this is a UVTAB academic resource.';
+    submitNote.textContent = 'Ready to upload. File will be submitted for administrator review.';
     step2.className = 'upload-step done';
     step3.className = 'upload-step active';
+    currentAiStatus = 'ready';
   }
 }
 
@@ -1549,7 +1570,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e)=>{
     document.getElementById('stepIndicator2').className = 'upload-step';
     document.getElementById('stepIndicator2').querySelector('.upload-step-num').textContent = '2';
     document.getElementById('stepIndicator3').className = 'upload-step';
-    document.getElementById('uploadSubmitBtn').disabled = true;
+    document.getElementById('uploadSubmitBtn').disabled = false;
     document.getElementById('uploadSubmitNote').textContent = 'Select a file above to begin the academic content check.';
     activeCourse = resource.course;
     activeCategory = resource.category;

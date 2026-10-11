@@ -528,6 +528,81 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
   .field-row{ flex-direction:column; gap:0; }
   .tutor-actions .btn{ flex: 1; }
 }
+
+/* Photo upload & live preview component */
+.photo-upload-container {
+  margin-top: 6px;
+}
+.photo-preview-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-m, 10px);
+}
+.photo-preview-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--vu-blue-light, #4e8fd1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+.photo-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.photo-preview-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.photo-preview-size {
+  font-size: 12px;
+  color: var(--vu-ink-soft, #94a3b8);
+}
+.photo-preview-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.btn-photo-action {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.btn-photo-remove {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.btn-photo-remove:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ffffff;
+}
+.btn-photo-change {
+  background: rgba(78, 143, 209, 0.15);
+  color: #7dd3fc;
+  border-color: rgba(78, 143, 209, 0.35);
+}
+.btn-photo-change:hover {
+  background: rgba(78, 143, 209, 0.3);
+  color: #ffffff;
+}
 </style>
 </head>
 <body>
@@ -729,8 +804,23 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
       </div>
       <div class="field">
         <label for="tPhoto">Profile Photo (Optional)</label>
-        <input type="file" id="tPhoto" accept="image/*">
-        <p class="form-note">Image will be uploaded to Supabase Storage so students can recognize you.</p>
+        <div class="photo-upload-container">
+          <div class="photo-preview-wrap" id="tPhotoPreviewWrap" style="display:none;">
+            <img id="tPhotoPreview" src="" alt="Profile Preview" class="photo-preview-img">
+            <div class="photo-preview-info">
+              <span id="tPhotoName" class="photo-preview-name">photo.jpg</span>
+              <span id="tPhotoSize" class="photo-preview-size">1.2 MB</span>
+              <div class="photo-preview-actions">
+                <button type="button" class="btn-photo-action btn-photo-remove" id="tPhotoRemoveBtn">✕ Remove Photo</button>
+                <button type="button" class="btn-photo-action btn-photo-change" id="tPhotoChangeBtn">↻ Change Photo</button>
+              </div>
+            </div>
+          </div>
+          <div class="photo-input-wrap" id="tPhotoInputWrap">
+            <input type="file" id="tPhoto" accept="image/*">
+            <p class="form-note">Supported: JPG, PNG, WebP, HEIC, GIF up to 10 MB.</p>
+          </div>
+        </div>
       </div>
       <div class="field">
         <label for="tBio">Tutor Description &amp; Qualifications</label>
@@ -815,8 +905,23 @@ p{ margin: 0 0 1em; color: var(--vu-ink-soft); }
 
       <div class="field">
         <label for="editTPhoto">New Profile Photo (Optional)</label>
-        <input type="file" id="editTPhoto" accept="image/*">
-        <p class="form-note">Leave empty to keep your existing profile photo.</p>
+        <div class="photo-upload-container">
+          <div class="photo-preview-wrap" id="editTPhotoPreviewWrap" style="display:none;">
+            <img id="editTPhotoPreview" src="" alt="Profile Preview" class="photo-preview-img">
+            <div class="photo-preview-info">
+              <span id="editTPhotoName" class="photo-preview-name">photo.jpg</span>
+              <span id="editTPhotoSize" class="photo-preview-size">1.2 MB</span>
+              <div class="photo-preview-actions">
+                <button type="button" class="btn-photo-action btn-photo-remove" id="editTPhotoRemoveBtn">✕ Remove Photo</button>
+                <button type="button" class="btn-photo-action btn-photo-change" id="editTPhotoChangeBtn">↻ Change Photo</button>
+              </div>
+            </div>
+          </div>
+          <div class="photo-input-wrap" id="editTPhotoInputWrap">
+            <input type="file" id="editTPhoto" accept="image/*">
+            <p class="form-note">Leave empty to keep your existing profile photo.</p>
+          </div>
+        </div>
       </div>
 
       <div class="field">
@@ -1303,9 +1408,60 @@ document.getElementById('tabTutorView').addEventListener('click', () => {
   document.getElementById('tabStudentView').className = 'btn btn-secondary btn-small';
 });
 
+/* ---------- Photo Upload Preview & Remove Handlers ---------- */
+function setupPhotoPreview(inputId, previewWrapId, inputWrapId, previewImgId, nameId, sizeId, removeBtnId, changeBtnId) {
+  const input = document.getElementById(inputId);
+  const previewWrap = document.getElementById(previewWrapId);
+  const inputWrap = document.getElementById(inputWrapId);
+  const previewImg = document.getElementById(previewImgId);
+  const nameEl = document.getElementById(nameId);
+  const sizeEl = document.getElementById(sizeId);
+  const removeBtn = document.getElementById(removeBtnId);
+  const changeBtn = document.getElementById(changeBtnId);
+
+  if (!input || !previewWrap) return { clearPreview: () => {} };
+
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      clearPreview();
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    nameEl.textContent = file.name;
+    sizeEl.textContent = (file.size / (1024 * 1024) >= 1) 
+      ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+      : (file.size / 1024).toFixed(0) + ' KB';
+    previewWrap.style.display = 'flex';
+    inputWrap.style.display = 'none';
+  });
+
+  removeBtn.addEventListener('click', () => {
+    clearPreview();
+  });
+
+  changeBtn.addEventListener('click', () => {
+    input.click();
+  });
+
+  function clearPreview() {
+    input.value = '';
+    previewImg.src = '';
+    previewWrap.style.display = 'none';
+    inputWrap.style.display = 'block';
+  }
+
+  return { clearPreview };
+}
+
+const addTutorPhoto = setupPhotoPreview('tPhoto', 'tPhotoPreviewWrap', 'tPhotoInputWrap', 'tPhotoPreview', 'tPhotoName', 'tPhotoSize', 'tPhotoRemoveBtn', 'tPhotoChangeBtn');
+const editTutorPhoto = setupPhotoPreview('editTPhoto', 'editTPhotoPreviewWrap', 'editTPhotoInputWrap', 'editTPhotoPreview', 'editTPhotoName', 'editTPhotoSize', 'editTPhotoRemoveBtn', 'editTPhotoChangeBtn');
+
 /* ---------- Event Listeners ---------- */
 document.getElementById('tutorSearch').addEventListener('input', renderTutors);
 document.getElementById('openAddTutor').addEventListener('click', () => {
+  addTutorPhoto.clearPreview();
   const tFac = document.getElementById('tFaculty');
   const tCrs = document.getElementById('tCourse');
   tFac.value = '';
@@ -1406,6 +1562,7 @@ document.getElementById('addTutorForm').addEventListener('submit', async (e) => 
     await STORE.addTutor(tutorData, photoFile);
     closeModal('addTutorModal');
     e.target.reset();
+    addTutorPhoto.clearPreview();
     showToast('🟢 Tutor registration successful! Your profile is live.');
   } catch (err) {
     console.error("Add tutor error:", err);
@@ -1445,6 +1602,7 @@ document.getElementById('editTutorForm').addEventListener('submit', async (e) =>
     await STORE.updateTutor(tId, tutorData, photoFile, currentPhotoPath);
     closeModal('editTutorModal');
     e.target.reset();
+    editTutorPhoto.clearPreview();
     showToast('Your tutor profile has been updated!');
   } catch (err) {
     console.error("Edit tutor error:", err);

@@ -331,11 +331,33 @@ const SupabaseStore = {
 
   async uploadStorageFile(file, bucket, path) {
     if (!SUPABASE_READY || !supabaseClient) throw new Error("Supabase is not initialized.");
+    
+    // Normalize and resolve MIME type based on file extension
+    let contentType = file.type || '';
+    const ext = (file.name || path).split('.').pop().toLowerCase();
+    const mimeMap = {
+      'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
+      'webp': 'image/webp', 'gif': 'image/gif', 'heic': 'image/heic',
+      'heif': 'image/heif', 'avif': 'image/avif', 'svg': 'image/svg+xml',
+      'pdf': 'application/pdf', 'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'ppt': 'application/vnd.ms-powerpoint',
+      'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'xls': 'application/vnd.ms-excel',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'txt': 'text/plain', 'csv': 'text/csv'
+    };
+    if (!contentType || contentType === 'application/octet-stream') {
+      contentType = mimeMap[ext] || 'application/octet-stream';
+    }
+
     const { data, error } = await supabaseClient.storage.from(bucket).upload(path, file, {
       cacheControl: '3600',
+      contentType: contentType,
       upsert: true
     });
     if (error) {
+      console.error('Storage upload error details:', error);
       throw new Error('Supabase Storage upload failed: ' + error.message);
     }
     const { data: pubData } = supabaseClient.storage.from(bucket).getPublicUrl(path);
