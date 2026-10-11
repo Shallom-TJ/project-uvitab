@@ -30,11 +30,15 @@ const AdminAuthGate = (() => {
 
     // Listen for admin auth state changes
     if (typeof onAdminStateChanged === 'function') {
-      onAdminStateChanged((isAdmin) => {
+      onAdminStateChanged((isAdmin, isSuperAdmin, role) => {
         if (isAdmin) {
           _showDashboard();
         } else {
-          _showLogin();
+          if (typeof _supabaseCurrentUser !== 'undefined' && _supabaseCurrentUser && _supabaseCurrentUser.email) {
+            _showAccessDenied(_supabaseCurrentUser.email);
+          } else {
+            _showLogin();
+          }
         }
       });
     } else {
@@ -51,42 +55,45 @@ const AdminAuthGate = (() => {
         <div class="admin-login-card">
           <div class="admin-login-header">
             <div class="admin-login-icon">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                <circle cx="12" cy="16" r="1.5"/>
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
             </div>
-            <h1 id="adminAuthTitle">🔒 Access Denied</h1>
-            <p class="admin-login-sub" id="adminAuthSub">Restricted Administrator Area</p>
-            <p class="admin-login-desc" id="adminAuthDesc">You do not have permission to access the administrator dashboard.</p>
+            <h1 id="adminAuthTitle">🛡️ Administrator Portal</h1>
+            <p class="admin-login-sub" id="adminAuthSub">Victoria University Uganda &bull; Governance Portal</p>
+            <p class="admin-login-desc" id="adminAuthDesc">Sign in with your verified administrator credentials to access platform governance, moderation, and financial audits.</p>
           </div>
 
-          <div id="adminActionButtons" class="admin-action-options" style="margin-bottom:20px; display:flex; flex-direction:column; gap:10px;">
-            <a href="index.html" class="admin-home-btn">
-              ← Return to Homepage
-            </a>
-            <button type="button" id="showAdminLoginFormBtn" class="admin-toggle-login-btn">
-              🔑 Log In with an Administrator Account
-            </button>
-          </div>
-
-          <form id="adminLoginForm" class="admin-login-form" autocomplete="on" style="display:none;">
-            <div style="font-size:12.5px; color:#94A3B8; margin-bottom:4px; text-align:center;">Enter administrator email and password:</div>
+          <form id="adminLoginForm" class="admin-login-form" autocomplete="on">
             <div class="admin-field">
               <label for="adminEmail">Administrator Email</label>
-              <input type="email" id="adminEmail" name="email" required placeholder="admin@example.com" autocomplete="email">
+              <input type="email" id="adminEmail" name="email" required placeholder="admin@vu.ac.ug" autocomplete="email">
             </div>
             <div class="admin-field">
               <label for="adminPassword">Password</label>
-              <input type="password" id="adminPassword" name="password" required placeholder="Enter your admin password" autocomplete="current-password">
+              <input type="password" id="adminPassword" name="password" required placeholder="Enter administrator password" autocomplete="current-password">
             </div>
-            <div class="admin-login-error" id="adminLoginError" style="display:none;"></div>
+            <div class="admin-login-error" id="adminLoginError" style="display:none; text-align:left; line-height:1.5;"></div>
             <button type="submit" class="admin-login-btn" id="adminLoginBtn">
-              <span class="admin-login-btn-text">Sign In as Administrator</span>
+              <span class="admin-login-btn-text">Sign In to Dashboard</span>
               <span class="admin-login-btn-loading" style="display:none;">Verifying Administrator Claims…</span>
             </button>
+            <div style="text-align:center; margin-top:6px;">
+              <a href="index.html" class="admin-back-link">← Return to Homepage</a>
+            </div>
           </form>
+
+          <div id="adminDeniedContainer" style="display:none; text-align:center;">
+            <div id="adminDeniedMessage" style="font-size:14px; color:#cbd5e1; line-height:1.6; margin-bottom:20px;"></div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <button type="button" id="adminSwitchAccountBtn" class="admin-toggle-login-btn">
+                🔑 Sign In with Another Account
+              </button>
+              <a href="index.html" class="admin-home-btn">
+                ← Return to Homepage
+              </a>
+            </div>
+          </div>
 
           <div class="admin-login-footer">
             <div style="font-size:11.5px; color:#64748B; margin-top:8px;">
@@ -384,20 +391,31 @@ const AdminAuthGate = (() => {
     // Insert at beginning of body
     document.body.prepend(_loginContainer);
 
-    // Toggle button handler
-    const showLoginBtn = document.getElementById('showAdminLoginFormBtn');
-    const form = document.getElementById('adminLoginForm');
-    if (showLoginBtn && form) {
-      showLoginBtn.addEventListener('click', () => {
-        form.style.display = 'flex';
-        showLoginBtn.style.display = 'none';
-        const emailInput = document.getElementById('adminEmail');
-        if (emailInput) emailInput.focus();
+    // Wire switch account button
+    const switchBtn = document.getElementById('adminSwitchAccountBtn');
+    if (switchBtn) {
+      switchBtn.addEventListener('click', async () => {
+        switchBtn.disabled = true;
+        switchBtn.textContent = 'Signing out…';
+        try {
+          if (typeof signOutAdmin === 'function') {
+            await signOutAdmin();
+          }
+        } catch (e) {
+          console.warn('Sign out note:', e);
+        } finally {
+          switchBtn.disabled = false;
+          switchBtn.textContent = '🔑 Sign In with Another Account';
+          _showLogin();
+        }
       });
     }
 
     // Form submit handler
-    form.addEventListener('submit', _handleLogin);
+    const form = document.getElementById('adminLoginForm');
+    if (form) {
+      form.addEventListener('submit', _handleLogin);
+    }
   }
 
   async function _handleLogin(e) {
@@ -411,7 +429,7 @@ const AdminAuthGate = (() => {
 
     // Reset error
     errorEl.style.display = 'none';
-    errorEl.textContent = '';
+    errorEl.innerHTML = '';
 
     // Show loading
     btn.disabled = true;
@@ -425,17 +443,8 @@ const AdminAuthGate = (() => {
       await signInAdmin(email, password);
       // Success — onAdminStateChanged will handle showing the dashboard
     } catch (err) {
-      let msg = 'Authentication failed.';
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        msg = 'Invalid email or password. Please try again.';
-      } else if (err.code === 'auth/too-many-requests') {
-        msg = 'Too many failed attempts. Please try again later.';
-      } else if (err.code === 'auth/network-request-failed') {
-        msg = 'Network error. Check your internet connection.';
-      } else if (err.message) {
-        msg = err.message;
-      }
-      errorEl.textContent = msg;
+      let msg = err.message || 'Authentication failed. Please verify your email and password.';
+      errorEl.innerHTML = msg.replace(/\n/g, '<br>');
       errorEl.style.display = 'block';
     } finally {
       btn.disabled = false;
@@ -456,12 +465,52 @@ const AdminAuthGate = (() => {
     }
   }
 
+  function _showAccessDenied(email) {
+    if (_dashboardContainer) {
+      _dashboardContainer.style.display = 'none';
+    }
+    if (_loginContainer) {
+      _loginContainer.style.display = 'block';
+      const title = document.getElementById('adminAuthTitle');
+      const sub = document.getElementById('adminAuthSub');
+      const desc = document.getElementById('adminAuthDesc');
+      const form = document.getElementById('adminLoginForm');
+      const denied = document.getElementById('adminDeniedContainer');
+      const deniedMsg = document.getElementById('adminDeniedMessage');
+
+      if (title) title.textContent = '🔒 Access Denied';
+      if (sub) sub.textContent = 'Unauthorized Account';
+      if (desc) desc.textContent = 'This account does not have platform administrator privileges.';
+      if (form) form.style.display = 'none';
+      if (denied) denied.style.display = 'block';
+      if (deniedMsg) {
+        deniedMsg.innerHTML = `You are authenticated as <strong style="color:#ffffff;">${email}</strong>.<br><br>This account is not designated as an administrator in the Supabase database. Please sign in with an authorized administrator account or assign the <code>superadmin</code> role in the Supabase SQL Editor.`;
+      }
+    }
+  }
+
   function _showLogin() {
     if (_dashboardContainer) {
       _dashboardContainer.style.display = 'none';
     }
     if (_loginContainer) {
       _loginContainer.style.display = 'block';
+      const title = document.getElementById('adminAuthTitle');
+      const sub = document.getElementById('adminAuthSub');
+      const desc = document.getElementById('adminAuthDesc');
+      const form = document.getElementById('adminLoginForm');
+      const denied = document.getElementById('adminDeniedContainer');
+      const errorEl = document.getElementById('adminLoginError');
+
+      if (title) title.textContent = '🛡️ Administrator Portal';
+      if (sub) sub.textContent = 'Victoria University Uganda • Governance Portal';
+      if (desc) desc.textContent = 'Sign in with your verified administrator credentials to access platform governance, moderation, and financial audits.';
+      if (form) form.style.display = 'flex';
+      if (denied) denied.style.display = 'none';
+      if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.innerHTML = '';
+      }
     }
   }
 

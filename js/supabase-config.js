@@ -68,22 +68,49 @@ async function _checkSupabaseRole(user) {
   }
 
   try {
-    const { data, error } = await supabaseClient
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
+    let role = null;
 
-    if (error) {
-      console.warn('Profile role lookup error:', error.message);
+    // 1. Try self-healing RPC sync first (ensures missing profiles are provisioned)
+    try {
+      const { data: syncData, error: syncErr } = await supabaseClient.rpc('sync_current_user_profile');
+      if (syncData && syncData.role) {
+        role = syncData.role;
+      }
+    } catch (rpcErr) {
+      // RPC may not be present before migration script is run
     }
 
-    const role = (data && data.role) ? data.role : 'user';
+    // 2. Direct profiles table query
+    if (!role) {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Profile role lookup error:', error.message);
+      }
+      if (data && data.role) {
+        role = data.role;
+      }
+    }
+
+    // 3. Metadata fallback (app_metadata or user_metadata)
+    if (!role) {
+      const metaRole = (user.app_metadata && user.app_metadata.role) ||
+                       (user.user_metadata && user.user_metadata.role);
+      if (metaRole === 'admin' || metaRole === 'superadmin') {
+        role = metaRole;
+      }
+    }
+
+    role = role || 'user';
     _supabaseAdminUser = role === 'admin' || role === 'superadmin';
     _supabaseSuperAdminUser = role === 'superadmin';
     _supabaseAdminRole = role;
 
-    console.log('Supabase Auth UID:', user.id, '| Role:', role, '| Admin:', _supabaseAdminUser, '| SuperAdmin:', _supabaseSuperAdminUser);
+    console.log('Supabase Auth UID:', user.id, '| Email:', user.email, '| Role:', role, '| Admin:', _supabaseAdminUser, '| SuperAdmin:', _supabaseSuperAdminUser);
   } catch (e) {
     _supabaseAdminUser = false;
     _supabaseSuperAdminUser = false;
@@ -126,26 +153,61 @@ async function signInSupabaseAdmin(email, password) {
     throw new Error('Supabase is not configured. Please paste your Supabase Anon Key in js/supabase-config.js.');
   }
 
+  const cleanEmail = email.trim().toLowerCase();
   const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: email.trim(),
+    email: cleanEmail,
     password: password
   });
 
   if (error) {
+    const errMsg = (error.message || '').toLowerCase();
+    if (errMsg.includes('email not confirmed')) {
+      throw new Error('⚠️ Email not confirmed. Please click the confirmation link sent to your inbox, or disable "Confirm email" in Supabase Dashboard → Authentication → Providers → Email.');
+    }
+    if (errMsg.includes('invalid login credentials') || errMsg.includes('invalid credentials')) {
+      throw new Error('❌ Invalid email or password. Please verify the credentials registered in Supabase Dashboard → Authentication → Users.');
+    }
     throw new Error(error.message || 'Authentication failed. Please check your email and password.');
   }
 
   const user = data.user;
   _supabaseCurrentUser = user;
+  _syncGlobalCurrentUser();
+
+  // Self-heal and sync profile
+  let role = null;
+  try {
+    const { data: syncData } = await supabaseClient.rpc('sync_current_user_profile');
+    if (syncData && syncData.role) {
+      role = syncData.role;
+    }
+  } catch (e) {
+    // Ignore RPC missing error
+  }
 
   // Verify that the user has admin role in profiles table
-  const { data: profile, error: pErr } = await supabaseClient
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
+  if (!role) {
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
 
-  const role = (profile && profile.role) ? profile.role : 'user';
+    if (profile && profile.role) {
+      role = profile.role;
+    }
+  }
+
+  // Fallback to metadata
+  if (!role) {
+    const metaRole = (user.app_metadata && user.app_metadata.role) ||
+                     (user.user_metadata && user.user_metadata.role);
+    if (metaRole === 'admin' || metaRole === 'superadmin') {
+      role = metaRole;
+    }
+  }
+
+  role = role || 'user';
   const isAdmin = role === 'admin' || role === 'superadmin';
 
   if (!isAdmin) {
@@ -155,7 +217,7 @@ async function signInSupabaseAdmin(email, password) {
     _supabaseSuperAdminUser = false;
     _supabaseAdminRole = 'user';
     _notifySupabaseAdminCallbacks();
-    throw new Error('🔒 Access Denied: This account does not possess administrator privileges.');
+    throw new Error(`🔒 Access Denied: The account "${user.email || cleanEmail}" is authenticated, but does not possess administrator privileges in the database. Please run the SQL role assignment in your Supabase Dashboard SQL Editor.`);
   }
 
   _supabaseAdminUser = true;

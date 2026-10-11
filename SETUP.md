@@ -46,17 +46,28 @@ To complete backend initialization for your Supabase project:
 ### Step 2: Enable Email Authentication & Create Your Administrator Account
 1. In your Supabase Dashboard, go to **Authentication** → **Providers** → **Email**:
    - Ensure the **Email** provider is toggled **ON**.
-   - Ensure **Confirm email** is set according to your preference (for instant admin login during school demonstrations, you can turn off "Confirm email").
+   - **Recommended for instant login**: Toggle **Confirm email** to **OFF** (or make sure you check "Auto Confirm User" when creating the user).
 2. Go to **Authentication** → **Users** → click **Add user** → **Create user**:
    - Enter your administrator email (e.g. `admin@vu.ac.ug`).
    - Enter a secure password.
-3. In **SQL Editor**, run the following query to promote this account to Super Administrator:
+   - Toggle **Auto Confirm User** to **ON** (if displayed).
+3. In **SQL Editor**, open and run [supabase/fix-policies-and-storage.sql](supabase/fix-policies-and-storage.sql), or run the following query:
    ```sql
-   UPDATE public.profiles
-   SET role = 'superadmin'
-   WHERE email = 'admin@vu.ac.ug';
+   -- Auto-confirm any pending unconfirmed emails
+   UPDATE auth.users
+   SET email_confirmed_at = COALESCE(email_confirmed_at, NOW())
+   WHERE email_confirmed_at IS NULL;
+
+   -- Ensure all existing users exist in profiles and have superadmin access
+   INSERT INTO public.profiles (id, email, role, created_at, updated_at)
+   SELECT id, COALESCE(email, ''), 'superadmin', created_at, NOW()
+   FROM auth.users
+   ON CONFLICT (id) DO UPDATE SET
+     role = 'superadmin',
+     email = EXCLUDED.email,
+     updated_at = NOW();
    ```
-4. You can now open `admin.html` and sign in through the verified Administrator Authentication Gate!
+4. You can now open `admin.html` and sign in directly with your administrator email and password!
 
 ---
 
