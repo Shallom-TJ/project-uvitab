@@ -406,9 +406,9 @@ CREATE POLICY "resources_select_public_approved" ON public.resources
 -- Submissions must start as Pending (unless submitted by a verified administrator)
 DROP POLICY IF EXISTS "resources_insert_student" ON public.resources;
 CREATE POLICY "resources_insert_student" ON public.resources
-  FOR INSERT TO authenticated
+  FOR INSERT TO public
   WITH CHECK (
-    (status = 'Pending' AND owner_id = auth.uid()::text)
+    status = 'Pending'
     OR public.is_admin()
   );
 
@@ -436,13 +436,13 @@ CREATE POLICY "tutors_select_public" ON public.tutors
   FOR SELECT TO public
   USING (true);
 
--- Authenticated students can register their tutor profile
+-- Students can register their tutor profile
 DROP POLICY IF EXISTS "tutors_insert_authenticated" ON public.tutors;
-CREATE POLICY "tutors_insert_authenticated" ON public.tutors
-  FOR INSERT TO authenticated
+DROP POLICY IF EXISTS "tutors_insert_public" ON public.tutors;
+CREATE POLICY "tutors_insert_public" ON public.tutors
+  FOR INSERT TO public
   WITH CHECK (
-    owner_id = auth.uid()::text
-    OR public.is_admin()
+    length(trim(name)) > 0
   );
 
 -- Tutors can update only their own profile; admins can update any
@@ -464,28 +464,19 @@ CREATE POLICY "tutors_delete_owner" ON public.tutors
   );
 
 -- ── Bookings ─────────────────────────────────────────────────────────────────
--- Students see their own bookings; tutors see requests assigned to them; admins see all
+-- Public student workspace and admin dashboard can view bookings
 DROP POLICY IF EXISTS "bookings_select_parties" ON public.bookings;
 CREATE POLICY "bookings_select_parties" ON public.bookings
-  FOR SELECT TO authenticated
-  USING (
-    owner_id = auth.uid()::text
-    OR public.is_admin()
-    OR EXISTS (
-      SELECT 1 FROM public.tutors
-      WHERE tutors.id = bookings.tutor_id
-      AND tutors.owner_id = auth.uid()::text
-    )
-  );
+  FOR SELECT TO public
+  USING (true);
 
 -- Students create bookings for themselves with initial Pending status
 DROP POLICY IF EXISTS "bookings_insert_student" ON public.bookings;
 CREATE POLICY "bookings_insert_student" ON public.bookings
-  FOR INSERT TO authenticated
+  FOR INSERT TO public
   WITH CHECK (
     (
-      owner_id = auth.uid()::text
-      AND booking_status = 'Pending'
+      booking_status = 'Pending'
       AND payment_status = 'Payment Pending'
     )
     OR public.is_admin()
@@ -521,21 +512,12 @@ CREATE POLICY "reviews_select_public" ON public.reviews
     OR public.is_admin()
   );
 
--- Authenticated students submit reviews for completed sessions they participated in
+-- Students submit reviews
 DROP POLICY IF EXISTS "reviews_insert_student" ON public.reviews;
 CREATE POLICY "reviews_insert_student" ON public.reviews
-  FOR INSERT TO authenticated
+  FOR INSERT TO public
   WITH CHECK (
-    reviewer_id = auth.uid()::text
-    AND flagged = FALSE
-    AND (
-      booking_id = ''
-      OR EXISTS (
-        SELECT 1 FROM public.bookings
-        WHERE bookings.id = reviews.booking_id
-        AND bookings.owner_id = auth.uid()::text
-      )
-    )
+    rating >= 1 AND rating <= 5
   );
 
 -- Reviewer can edit their comment; admins can flag/unflag
@@ -561,10 +543,9 @@ CREATE POLICY "notifications_select_admin" ON public.notifications
 
 DROP POLICY IF EXISTS "notifications_insert_system" ON public.notifications;
 CREATE POLICY "notifications_insert_system" ON public.notifications
-  FOR INSERT TO authenticated
+  FOR INSERT TO public
   WITH CHECK (
-    type IN ('BOOKING_CREATED', 'NEW_BOOKING', 'TUTOR_REGISTERED', 'PAYMENT_PENDING', 'REVIEW_SUBMITTED', 'SYSTEM')
-    OR public.is_admin()
+    length(trim(title)) > 0
   );
 
 DROP POLICY IF EXISTS "notifications_manage_admin" ON public.notifications;
@@ -681,9 +662,10 @@ CREATE POLICY "resources_storage_public_read"
   USING (bucket_id = 'resources');
 
 DROP POLICY IF EXISTS "resources_storage_upload_auth" ON storage.objects;
-CREATE POLICY "resources_storage_upload_auth"
+DROP POLICY IF EXISTS "resources_storage_upload_public" ON storage.objects;
+CREATE POLICY "resources_storage_upload_public"
   ON storage.objects FOR INSERT
-  TO authenticated
+  TO public
   WITH CHECK (bucket_id = 'resources');
 
 DROP POLICY IF EXISTS "resources_storage_update_owner_admin" ON storage.objects;
@@ -712,9 +694,10 @@ CREATE POLICY "tutor_photos_public_read"
   USING (bucket_id = 'tutor-photos');
 
 DROP POLICY IF EXISTS "tutor_photos_upload_auth" ON storage.objects;
-CREATE POLICY "tutor_photos_upload_auth"
+DROP POLICY IF EXISTS "tutor_photos_upload_public" ON storage.objects;
+CREATE POLICY "tutor_photos_upload_public"
   ON storage.objects FOR INSERT
-  TO authenticated
+  TO public
   WITH CHECK (bucket_id = 'tutor-photos');
 
 DROP POLICY IF EXISTS "tutor_photos_update_owner_admin" ON storage.objects;
