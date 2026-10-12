@@ -8,7 +8,7 @@ Victoria University Notes (**VU NOTES**) is a real-time, responsive student acad
 
 The client-side connection is already pre-configured in [js/supabase-config.js](file:///Users/praise/Desktop/NOTES..VU/js/supabase-config.js):
 
-- **Supabase Project URL**: `https://wnxzqewpjanebtniadmj.supabase.co`
+- **Supabase Project URL**: `https://urxdyoeblbnhoqwhuins.supabase.co`
 - **Publishable Key (`anon`)**: Pre-configured in `js/supabase-config.js`
 - **Frontend Architecture**: Zero dependencies required; standard ES6 JavaScript interacting directly and securely with Supabase REST and Storage APIs via `@supabase/supabase-js`.
 
@@ -22,7 +22,7 @@ The client-side connection is already pre-configured in [js/supabase-config.js](
 To complete backend initialization for your Supabase project:
 
 ### Step 1: Run the Database Schema & Storage Setup
-1. Log in to your [Supabase Dashboard](https://supabase.com/dashboard/project/wnxzqewpjanebtniadmj).
+1. Log in to your [Supabase Dashboard](https://supabase.com/dashboard/project/urxdyoeblbnhoqwhuins).
 2. In the left sidebar, click **SQL Editor** → **New query**.
 3. Open [supabase/schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase/schema.sql) (or [supabase-schema.sql](file:///Users/praise/Desktop/NOTES..VU/supabase-schema.sql)) from this repository, copy its entire contents, paste it into the editor, and click **Run**.
 4. This script executes idempotently and automatically provisions:
@@ -43,31 +43,23 @@ To complete backend initialization for your Supabase project:
 
 ---
 
-### Step 2: Enable Email Authentication & Create Your Administrator Account
-1. In your Supabase Dashboard, go to **Authentication** → **Providers** → **Email**:
-   - Ensure the **Email** provider is toggled **ON**.
-   - **Recommended for instant login**: Toggle **Confirm email** to **OFF** (or make sure you check "Auto Confirm User" when creating the user).
-2. Go to **Authentication** → **Users** → click **Add user** → **Create user**:
-   - Enter your administrator email (e.g. `admin@vu.ac.ug`).
-   - Enter a secure password.
-   - Toggle **Auto Confirm User** to **ON** (if displayed).
-3. In **SQL Editor**, open and run [supabase/fix-policies-and-storage.sql](supabase/fix-policies-and-storage.sql), or run the following query:
+### Step 2: Create the first account safely
+1. In Supabase Dashboard → Authentication → Providers, enable Email/Password sign-in. Keep email confirmation enabled where possible.
+2. Register your own account through the website or create it in Authentication → Users. Confirm the email as required.
+3. Copy your account's **User UID** from Authentication → Users.
+4. In SQL Editor, run the one-time bootstrap query below after replacing `PASTE_YOUR_AUTH_USER_UUID_HERE` with your own UID. Verify the UID and email carefully before running it. Run this only once for your intended super administrator:
    ```sql
-   -- Auto-confirm any pending unconfirmed emails
-   UPDATE auth.users
-   SET email_confirmed_at = COALESCE(email_confirmed_at, NOW())
-   WHERE email_confirmed_at IS NULL;
-
-   -- Ensure all existing users exist in profiles and have superadmin access
-   INSERT INTO public.profiles (id, email, role, created_at, updated_at)
-   SELECT id, COALESCE(email, ''), 'superadmin', created_at, NOW()
-   FROM auth.users
-   ON CONFLICT (id) DO UPDATE SET
-     role = 'superadmin',
-     email = EXCLUDED.email,
-     updated_at = NOW();
+   UPDATE public.profiles p
+   SET role = 'superadmin', updated_at = now()
+   FROM auth.users u
+   WHERE p.id = u.id
+     AND u.id = 'PASTE_YOUR_AUTH_USER_UUID_HERE'::uuid
+     AND lower(u.email) = lower(p.email)
+     AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE role = 'superadmin');
    ```
-4. You can now open `admin.html` and sign in directly with your administrator email and password!
+5. Confirm exactly one profile has `role = 'superadmin'`. New signups are always ordinary users. The website uses the `grant_admin_role` RPC to add/remove administrators; ordinary admins cannot appoint admins or super-admins.
+
+**Never run a script that promotes every user, grants super-admin based on email text, or automatically confirms all users.**
 
 ---
 
@@ -130,3 +122,14 @@ npx netlify deploy --prod --dir=.
 - **No Exposed Secrets**: No Supabase `service_role` key, database master password, or private credentials are in frontend JavaScript.
 - **Row Level Security**: Non-admin visitors can only insert pending resources and bookings. Only verified administrators with `role = 'admin'` or `'superadmin'` can approve submissions, update platform settings, or grant admin permissions.
 - **Data Persistence**: All student notes, past papers, bookings, and reviews persist in PostgreSQL on Supabase Cloud.
+
+## Production hardening checklist
+
+- Confirm the website uses the project URL and publishable key from this project's API settings. Never put a secret/service-role key in browser code.
+- Run the secured `supabase/schema.sql` only once on this new, empty project. It creates the tables, policies, storage buckets, and realtime publication entries.
+- Create your own Auth account and bootstrap only that exact UID using `supabase/bootstrap-superadmin.sql.example`. Never run the deprecated repair SQL.
+- In Supabase Auth settings, configure password policy, email confirmation, SMTP, MFA for administrators where available, and Auth rate limits.
+- Keep the Supabase API gateway enabled (it is the managed API entry point). Supabase manages service routing/load balancing; a SQL schema cannot provision a separate load balancer. For app-specific quotas, add checks to Edge Functions and configure gateway/provider limits.
+- Configure allowed website origins/CORS for deployed Edge Functions, use HTTPS hosting, set custom domain and redirect URLs, and keep secrets in Supabase Vault/Edge Function secrets.
+- Enable backups/PITR on a plan that supports them, review security/performance advisors after schema deployment, and test access as anon, ordinary user, admin, and super-admin.
+- The current AI browser client expects a Supabase Edge Function named `chatWithAI`; that function must be separately implemented/deployed with JWT verification and server-side provider secrets before AI can be considered live. The Firebase Functions files in this archive are not automatically connected to the Supabase website.

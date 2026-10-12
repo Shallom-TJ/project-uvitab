@@ -1486,7 +1486,7 @@
         let roles = [];
         if (typeof supabaseClient !== 'undefined' && supabaseClient) {
           const { data, error } = await supabaseClient.from('profiles').select('*');
-          roles = (data || []).map(p => ({
+          roles = (data || []).filter(p => p.role === 'admin' || p.role === 'superadmin').map(p => ({
             uid: p.id,
             email: p.email,
             role: p.role,
@@ -1526,7 +1526,7 @@
               btn.disabled = true; btn.textContent = 'Revoking…';
               try {
                 if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-                  const { error } = await supabaseClient.from('profiles').update({ role: 'user' }).eq('id', uid);
+                  const { error } = await supabaseClient.rpc('grant_admin_role', { target_user_id: uid, new_role: 'user' });
                   if (error) throw new Error(error.message);
                   showToast(`Administrator privileges revoked for ${email}.`);
                   renderSuperAdminSection();
@@ -1571,7 +1571,7 @@
           if (!matched) throw new Error(`User with email "${targetEmail}" does not exist in profiles. Make sure they have registered an account first.`);
           
           const grantedBy = (typeof currentUser !== 'undefined' && currentUser && currentUser.email) ? currentUser.email : 'Super Admin';
-          const { error: updErr } = await supabaseClient.from('profiles').update({ role: 'admin', granted_by: grantedBy }).eq('id', matched.id);
+          const { error: updErr } = await supabaseClient.rpc('grant_admin_role', { target_user_id: matched.id, new_role: 'admin' });
           if (updErr) throw new Error(updErr.message);
 
           msgEl.style.color = '#4ade80';

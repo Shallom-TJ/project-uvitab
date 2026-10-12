@@ -27,7 +27,7 @@ const AIService = (() => {
 
     const trimmedMsg = message.trim();
     const config = window._SUPABASE_CONFIG || {};
-    const supabaseUrl = config.url || 'https://wnxzqewpjanebtniadmj.supabase.co';
+    const supabaseUrl = config.url || 'https://urxdyoeblbnhoqwhuins.supabase.co';
     const anonKey = config.anonKey || '';
 
     // Try calling Supabase Edge Function if available

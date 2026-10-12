@@ -29,6 +29,18 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Administrative audit trail; only database owner/service role can read it directly.
+CREATE TABLE IF NOT EXISTS public.admin_audit_log (
+  id BIGSERIAL PRIMARY KEY,
+  actor_id UUID NOT NULL,
+  target_user_id UUID NOT NULL,
+  old_role TEXT NOT NULL,
+  new_role TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.admin_audit_log ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.admin_audit_log FROM anon, authenticated;
+
 -- 2. Academic Courses Catalogue
 CREATE TABLE IF NOT EXISTS public.courses (
   id BIGSERIAL PRIMARY KEY,
@@ -186,7 +198,7 @@ CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 STABLE
 AS $$
   SELECT EXISTS (
@@ -201,7 +213,7 @@ CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 STABLE
 AS $$
   SELECT EXISTS (
@@ -219,26 +231,45 @@ CREATE OR REPLACE FUNCTION public.grant_admin_role(
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 AS $$
+DECLARE
+  old_role TEXT;
 BEGIN
-  IF NOT public.is_super_admin() THEN
-    RAISE EXCEPTION 'Access Denied: Only superadministrators may alter user roles.';
+  IF auth.uid() IS NULL OR NOT public.is_super_admin() THEN
+    RAISE EXCEPTION 'Only the designated super administrator may change administrator roles.'
+      USING ERRCODE = '42501';
   END IF;
 
-  IF new_role NOT IN ('user', 'admin', 'superadmin') THEN
-    RAISE EXCEPTION 'Invalid role: %', new_role;
+  -- Database-level throttle: at most 20 role changes per super-admin per 10 minutes.
+  PERFORM pg_advisory_xact_lock(hashtext(auth.uid()::text));
+  IF (SELECT COUNT(*) FROM public.admin_audit_log
+      WHERE actor_id = auth.uid()
+        AND created_at > NOW() - INTERVAL '10 minutes') >= 20 THEN
+    RAISE EXCEPTION 'Administrator role-change rate limit exceeded; try again later.'
+      USING ERRCODE = '42900';
+  END IF;
+
+  -- The super-admin role is intentionally immutable through the public API.
+  IF new_role NOT IN ('user', 'admin') THEN
+    RAISE EXCEPTION 'Role must be admin or user; super-admin cannot be assigned through this function.';
+  END IF;
+
+  SELECT role INTO old_role FROM public.profiles WHERE id = target_user_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'User profile not found.' USING ERRCODE = 'P0002';
+  END IF;
+  IF old_role = 'superadmin' THEN
+    RAISE EXCEPTION 'The designated super-admin account is protected.' USING ERRCODE = '42501';
   END IF;
 
   UPDATE public.profiles
-  SET role = new_role,
-      granted_by = COALESCE(auth.jwt()->>'email', auth.uid()::text),
-      updated_at = NOW()
-  WHERE id = target_user_id;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'User profile not found for ID: %', target_user_id;
-  END IF;
+     SET role = new_role,
+         granted_by = COALESCE(auth.jwt()->>'email', auth.uid()::text),
+         updated_at = NOW()
+   WHERE id = target_user_id;
+  INSERT INTO public.admin_audit_log(actor_id, target_user_id, old_role, new_role)
+  VALUES (auth.uid(), target_user_id, old_role, new_role);
 END;
 $$;
 
@@ -252,12 +283,13 @@ CREATE OR REPLACE FUNCTION public.tr_protect_profile_roles()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 BEGIN
   NEW.id := OLD.id; -- prevent ID changing
   IF NEW.role IS DISTINCT FROM OLD.role THEN
-    IF NOT public.is_super_admin() THEN
+    -- Allow trusted SQL-editor/bootstrap operations (no end-user JWT); API callers must be super-admin.
+    IF auth.uid() IS NOT NULL AND NOT public.is_super_admin() THEN
       RAISE EXCEPTION 'Privilege Escalation Blocked: Role changes require superadministrator authorization.';
     END IF;
   END IF;
@@ -277,7 +309,7 @@ CREATE OR REPLACE FUNCTION public.tr_protect_booking_financials()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 BEGIN
   NEW.id := OLD.id;
@@ -313,7 +345,7 @@ CREATE OR REPLACE FUNCTION public.tr_protect_resource_moderation()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 AS $$
 BEGIN
   NEW.id := OLD.id;
@@ -391,6 +423,10 @@ DROP POLICY IF EXISTS "courses_delete_admin" ON public.courses;
 CREATE POLICY "courses_delete_admin" ON public.courses
   FOR DELETE TO authenticated
   USING (public.is_admin());
+
+DROP POLICY IF EXISTS "courses_insert_authorized" ON public.courses;
+CREATE POLICY "courses_insert_authorized" ON public.courses
+  FOR INSERT TO authenticated WITH CHECK (public.is_admin());
 
 -- ── Resources ────────────────────────────────────────────────────────────────
 -- Public can view Approved resources; authenticated owners see their own pending/moderated files; admins see all
@@ -707,30 +743,14 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = pg_catalog, public, pg_temp
 AS $$
-DECLARE
-  v_role TEXT := 'user';
-  v_admin_count INT;
 BEGIN
-  -- If no admin exists in profiles yet, or email contains 'admin', grant superadmin
-  SELECT COUNT(*) INTO v_admin_count FROM public.profiles WHERE role IN ('admin', 'superadmin');
-  IF v_admin_count = 0 OR NEW.email ILIKE '%admin%' THEN
-    v_role := 'superadmin';
-  END IF;
-
+  -- New accounts are always ordinary users. No email-pattern or first-user escalation.
   INSERT INTO public.profiles (id, email, role, created_at, updated_at)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.email, ''),
-    v_role,
-    NOW(),
-    NOW()
-  )
-  ON CONFLICT (id) DO UPDATE SET
-    email = EXCLUDED.email,
-    updated_at = NOW();
-
+  VALUES (NEW.id, COALESCE(NEW.email, ''), 'user', NOW(), NOW())
+  ON CONFLICT (id) DO UPDATE
+    SET email = EXCLUDED.email, updated_at = NOW();
   RETURN NEW;
 END;
 $$;
@@ -741,68 +761,122 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
--- Auto-confirm any existing users and backfill into public.profiles
-UPDATE auth.users
-SET email_confirmed_at = COALESCE(email_confirmed_at, NOW())
-WHERE email_confirmed_at IS NULL;
-
-INSERT INTO public.profiles (id, email, role, created_at, updated_at)
-SELECT 
-  id, 
-  COALESCE(email, ''), 
-  'superadmin', 
-  created_at, 
-  NOW()
-FROM auth.users
-ON CONFLICT (id) DO UPDATE SET
-  role = 'superadmin',
-  email = EXCLUDED.email,
-  updated_at = NOW();
+-- Intentionally no automatic email confirmation or role backfill.
+-- Bootstrap exactly one super-admin manually after verifying its Auth user ID.
 
 -- Self-Healing RPC: callable by authenticated client to sync their profile
 CREATE OR REPLACE FUNCTION public.sync_current_user_profile()
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth, pg_temp
+SET search_path = pg_catalog, public, auth, pg_temp
 AS $$
 DECLARE
-  v_uid UUID;
+  v_uid UUID := auth.uid();
   v_email TEXT;
   v_role TEXT;
-  v_admin_count INT;
 BEGIN
-  v_uid := auth.uid();
   IF v_uid IS NULL THEN
-    RETURN jsonb_build_object('error', 'Not authenticated');
+    RAISE EXCEPTION 'Authentication required.' USING ERRCODE = '42501';
   END IF;
-
   SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
+  INSERT INTO public.profiles (id, email, role, created_at, updated_at)
+  VALUES (v_uid, COALESCE(v_email, ''), 'user', NOW(), NOW())
+  ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, updated_at = NOW();
   SELECT role INTO v_role FROM public.profiles WHERE id = v_uid;
-  
-  IF v_role IS NULL THEN
-    SELECT COUNT(*) INTO v_admin_count FROM public.profiles WHERE role IN ('admin', 'superadmin');
-    IF v_admin_count = 0 OR COALESCE(v_email, '') ILIKE '%admin%' THEN
-      v_role := 'superadmin';
-    ELSE
-      v_role := 'user';
-    END IF;
-
-    INSERT INTO public.profiles (id, email, role, created_at, updated_at)
-    VALUES (v_uid, COALESCE(v_email, ''), v_role, NOW(), NOW())
-    ON CONFLICT (id) DO UPDATE SET
-      email = EXCLUDED.email,
-      role = v_role,
-      updated_at = NOW();
-  END IF;
-
-  RETURN jsonb_build_object('id', v_uid, 'email', v_email, 'role', v_role);
+  RETURN jsonb_build_object('id', v_uid, 'email', v_email, 'role', COALESCE(v_role, 'user'));
 END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.sync_current_user_profile() TO authenticated;
 
 
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- SECTION 8B: Final least-privilege policy overrides
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- Profiles: only the owner or an administrator can read; role writes go through RPC.
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+CREATE POLICY "profiles_update_own" ON public.profiles
+  FOR UPDATE TO authenticated
+  USING (id = (SELECT auth.uid()) OR public.is_super_admin())
+  WITH CHECK (id = (SELECT auth.uid()) OR public.is_super_admin());
+
+-- Writes that create student content require a real authenticated account.
+DROP POLICY IF EXISTS "resources_insert_student" ON public.resources;
+CREATE POLICY "resources_insert_student" ON public.resources
+  FOR INSERT TO authenticated
+  WITH CHECK (owner_id = (SELECT auth.uid())::text AND status = 'Pending');
+
+DROP POLICY IF EXISTS "tutors_insert_public" ON public.tutors;
+DROP POLICY IF EXISTS "tutors_insert_authenticated" ON public.tutors;
+CREATE POLICY "tutors_insert_authenticated" ON public.tutors
+  FOR INSERT TO authenticated
+  WITH CHECK (owner_id = (SELECT auth.uid())::text AND length(trim(name)) > 0);
+
+DROP POLICY IF EXISTS "bookings_select_parties" ON public.bookings;
+CREATE POLICY "bookings_select_parties" ON public.bookings
+  FOR SELECT TO authenticated
+  USING (
+    public.is_admin()
+    OR owner_id = (SELECT auth.uid())::text
+    OR EXISTS (SELECT 1 FROM public.tutors t
+               WHERE t.id = bookings.tutor_id
+                 AND t.owner_id = (SELECT auth.uid())::text)
+  );
+
+DROP POLICY IF EXISTS "bookings_insert_student" ON public.bookings;
+CREATE POLICY "bookings_insert_student" ON public.bookings
+  FOR INSERT TO authenticated
+  WITH CHECK (owner_id = (SELECT auth.uid())::text
+              AND booking_status = 'Pending'
+              AND payment_status = 'Payment Pending');
+
+DROP POLICY IF EXISTS "reviews_insert_student" ON public.reviews;
+CREATE POLICY "reviews_insert_student" ON public.reviews
+  FOR INSERT TO authenticated
+  WITH CHECK (reviewer_id = (SELECT auth.uid())::text AND rating BETWEEN 1 AND 5);
+
+-- System notifications must not be forgeable by anonymous visitors.
+DROP POLICY IF EXISTS "notifications_insert_system" ON public.notifications;
+CREATE POLICY "notifications_insert_admin" ON public.notifications
+  FOR INSERT TO authenticated
+  WITH CHECK (public.is_admin());
+
+-- Tighten update checks against changing ownership.
+DROP POLICY IF EXISTS "resources_update_owner_or_admin" ON public.resources;
+CREATE POLICY "resources_update_owner_or_admin" ON public.resources
+  FOR UPDATE TO authenticated
+  USING (owner_id = (SELECT auth.uid())::text OR public.is_admin())
+  WITH CHECK (owner_id = (SELECT auth.uid())::text OR public.is_admin());
+DROP POLICY IF EXISTS "tutors_update_owner" ON public.tutors;
+CREATE POLICY "tutors_update_owner" ON public.tutors
+  FOR UPDATE TO authenticated
+  USING (owner_id = (SELECT auth.uid())::text OR public.is_admin())
+  WITH CHECK (owner_id = (SELECT auth.uid())::text OR public.is_admin());
+DROP POLICY IF EXISTS "reviews_update_reviewer_or_admin" ON public.reviews;
+CREATE POLICY "reviews_update_reviewer_or_admin" ON public.reviews
+  FOR UPDATE TO authenticated
+  USING (reviewer_id = (SELECT auth.uid())::text OR public.is_admin())
+  WITH CHECK (reviewer_id = (SELECT auth.uid())::text OR public.is_admin());
+
+-- Storage uploads require authentication. Existing paths are retained for compatibility;
+-- ownership is enforced for updates/deletes and uploads cannot be anonymous.
+DROP POLICY IF EXISTS "resources_storage_upload_public" ON storage.objects;
+CREATE POLICY "resources_storage_upload_auth" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'resources');
+DROP POLICY IF EXISTS "tutor_photos_upload_public" ON storage.objects;
+CREATE POLICY "tutor_photos_upload_auth" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'tutor-photos');
+
+-- Explicitly remove public execution from role-changing RPC and grant only to signed-in users.
+REVOKE ALL ON FUNCTION public.grant_admin_role(UUID, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.grant_admin_role(UUID, TEXT) TO authenticated;
+REVOKE ALL ON FUNCTION public.sync_current_user_profile() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.sync_current_user_profile() TO authenticated;
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- SECTION 9: Idempotent Seed Data

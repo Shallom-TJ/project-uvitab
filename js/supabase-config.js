@@ -8,8 +8,8 @@
    2. NEVER place your service_role (secret) key here.
    ========================================================= */
 
-var SUPABASE_URL = 'https://wnxzqewpjanebtniadmj.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndueHpxZXdwamFuZWJ0bmlhZG1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1ODk2MjEsImV4cCI6MjEwNzE2NTYyMX0.EW8uDnHd2UeoNTVivNW2nU3O8zTuMXy1HzQKIdomkXU';
+var SUPABASE_URL = 'https://urxdyoeblbnhoqwhuins.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_DEdVtf8fRPjbObN7y0dDTg_1bki6jpO';
 
 // Guard: Supabase SDK loaded AND real credentials pasted
 var SUPABASE_READY = typeof supabase !== 'undefined' &&
@@ -96,14 +96,7 @@ async function _checkSupabaseRole(user) {
       }
     }
 
-    // 3. Metadata fallback (app_metadata or user_metadata)
-    if (!role) {
-      const metaRole = (user.app_metadata && user.app_metadata.role) ||
-                       (user.user_metadata && user.user_metadata.role);
-      if (metaRole === 'admin' || metaRole === 'superadmin') {
-        role = metaRole;
-      }
-    }
+    // Never authorize from user-editable metadata; database profile is authoritative.
 
     role = role || 'user';
     _supabaseAdminUser = role === 'admin' || role === 'superadmin';
@@ -198,14 +191,7 @@ async function signInSupabaseAdmin(email, password) {
     }
   }
 
-  // Fallback to metadata
-  if (!role) {
-    const metaRole = (user.app_metadata && user.app_metadata.role) ||
-                     (user.user_metadata && user.user_metadata.role);
-    if (metaRole === 'admin' || metaRole === 'superadmin') {
-      role = metaRole;
-    }
-  }
+  // Never authorize from user-editable metadata; database profile is authoritative.
 
   role = role || 'user';
   const isAdmin = role === 'admin' || role === 'superadmin';

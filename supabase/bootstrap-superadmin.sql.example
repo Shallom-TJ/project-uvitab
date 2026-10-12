@@ -1,0 +1,12 @@
+-- Run only after creating your own verified Supabase Auth user.
+-- Replace the UUID below with YOUR Auth user UID; do not use an email pattern.
+UPDATE public.profiles p
+SET role = 'superadmin', updated_at = now()
+FROM auth.users u
+WHERE p.id = u.id
+  AND u.id = '2ce90cfa-8943-41b0-9b1d-9b4f56614a9c'::uuid
+  AND lower(u.email) = lower(p.email)
+  AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE role = 'superadmin');
+
+-- Verify: must return exactly one row and it must be your account.
+SELECT id, email, role, created_at FROM public.profiles WHERE role = 'superadmin';
