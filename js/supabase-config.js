@@ -123,6 +123,41 @@ function _notifySupabaseAdminCallbacks() {
   });
 }
 
+
+/**
+ * Make sure the visitor has a real Supabase session.
+ * Visitors who are not signed in get an anonymous Supabase account (a real UUID),
+ * so Row Level Security policies that require "authenticated" + owner_id = auth.uid()
+ * accept their uploads. Requires: Supabase Dashboard -> Authentication -> Sign In / Providers
+ * -> "Allow anonymous sign-ins" = ON.
+ */
+var _ensureSessionPromise = null;
+async function ensureSupabaseSession() {
+  if (!supabaseClient) throw new Error('Supabase is not connected.');
+  if (_supabaseCurrentUser && _supabaseCurrentUser.id) return _supabaseCurrentUser;
+  if (_ensureSessionPromise) return _ensureSessionPromise;
+
+  _ensureSessionPromise = (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session && session.user) {
+      _supabaseCurrentUser = session.user;
+      _syncGlobalCurrentUser();
+      return session.user;
+    }
+    const { data, error } = await supabaseClient.auth.signInAnonymously();
+    if (error) {
+      throw new Error('Could not start a guest session: ' + error.message +
+        ' (Enable "Allow anonymous sign-ins" in Supabase -> Authentication -> Sign In / Providers.)');
+    }
+    _supabaseCurrentUser = data.user;
+    _syncGlobalCurrentUser();
+    return data.user;
+  })();
+
+  try { return await _ensureSessionPromise; }
+  finally { _ensureSessionPromise = null; }
+}
+
 /**
  * Helper to get active user ID (Supabase Auth UID or persistent local UID)
  */
@@ -270,4 +305,3 @@ function isAdminUser() { return _supabaseAdminUser; }
 function isSuperAdminUser() { return _supabaseSuperAdminUser; }
 function getAdminRole() { return _supabaseAdminRole; }
 const onAdminStateChanged = onSupabaseAdminStateChanged;
-

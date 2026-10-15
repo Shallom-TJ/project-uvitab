@@ -223,7 +223,7 @@ function mapSupabaseNotification(n) {
 
 const SupabaseStore = {
   watchTutors(cb) {
-    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => {}; }
+    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => { }; }
 
     async function fetchTutors() {
       try {
@@ -260,7 +260,7 @@ const SupabaseStore = {
   watchCourses(cb) {
     if (!SUPABASE_READY || !supabaseClient) {
       cb(DEFAULT_COURSES.map((name, i) => ({ id: 'c_' + i, name })));
-      return () => {};
+      return () => { };
     }
 
     async function fetchCourses() {
@@ -295,7 +295,7 @@ const SupabaseStore = {
   },
 
   watchResources(cb) {
-    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => {}; }
+    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => { }; }
 
     async function fetchResources() {
       try {
@@ -330,8 +330,9 @@ const SupabaseStore = {
   },
 
   async uploadStorageFile(file, bucket, path) {
+    await ensureSupabaseSession();
     if (!SUPABASE_READY || !supabaseClient) throw new Error("Supabase is not initialized.");
-    
+
     // Normalize and resolve MIME type based on file extension
     let contentType = file.type || '';
     const ext = (file.name || path).split('.').pop().toLowerCase();
@@ -354,7 +355,7 @@ const SupabaseStore = {
     const { data, error } = await supabaseClient.storage.from(bucket).upload(path, file, {
       cacheControl: '3600',
       contentType: contentType,
-      upsert: true
+      upsert: false
     });
     if (error) {
       console.error('Storage upload error details:', error);
@@ -368,6 +369,7 @@ const SupabaseStore = {
   },
 
   async addResource(r, file) {
+    await ensureSupabaseSession();
     if (!SUPABASE_READY || !supabaseClient) throw new Error("Supabase is not connected.");
     let downloadURL = '', storagePath = '', fileName = '', fileSize = 0, fileType = '';
 
@@ -414,7 +416,7 @@ const SupabaseStore = {
     const { data, error } = await supabaseClient.from('resources').insert([insertData]).select();
     if (error) {
       if (storagePath) {
-        try { await supabaseClient.storage.from('resources').remove([storagePath]); } catch (e) {}
+        try { await supabaseClient.storage.from('resources').remove([storagePath]); } catch (e) { }
       }
       throw new Error(error.message);
     }
@@ -475,6 +477,7 @@ const SupabaseStore = {
   },
 
   async addTutor(t, photoFile) {
+    await ensureSupabaseSession();
     if (!SUPABASE_READY || !supabaseClient) throw new Error("Supabase is not connected.");
     let photoURL = '', storagePath = '';
 
@@ -509,7 +512,7 @@ const SupabaseStore = {
     const { error } = await supabaseClient.from('tutors').insert([rowData]);
     if (error) {
       if (storagePath) {
-        try { await supabaseClient.storage.from('tutor-photos').remove([storagePath]); } catch (e) {}
+        try { await supabaseClient.storage.from('tutor-photos').remove([storagePath]); } catch (e) { }
       }
       throw new Error(error.message);
     }
@@ -536,7 +539,7 @@ const SupabaseStore = {
       photoURL = uploadRes.downloadURL;
 
       if (currentPhotoStoragePath) {
-        try { await supabaseClient.storage.from('tutor-photos').remove([currentPhotoStoragePath]); } catch (e) {}
+        try { await supabaseClient.storage.from('tutor-photos').remove([currentPhotoStoragePath]); } catch (e) { }
       }
       storagePath = uploadRes.storagePath;
     }
@@ -590,7 +593,7 @@ const SupabaseStore = {
   },
 
   watchBookings(cb) {
-    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => {}; }
+    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => { }; }
 
     async function fetchBookings() {
       try {
@@ -625,6 +628,7 @@ const SupabaseStore = {
   },
 
   async addBooking(b) {
+    await ensureSupabaseSession();
     if (!SUPABASE_READY || !supabaseClient) throw new Error("Supabase is not connected.");
     const bookingId = 'BK-' + Math.floor(1000 + Math.random() * 9000);
     const settings = await SupabaseStore.getAdminSettings();
@@ -701,7 +705,7 @@ const SupabaseStore = {
   },
 
   watchNotifications(cb) {
-    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => {}; }
+    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => { }; }
 
     async function fetchNotifications() {
       try {
@@ -754,7 +758,7 @@ const SupabaseStore = {
   },
 
   watchReviews(cb) {
-    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => {}; }
+    if (!SUPABASE_READY || !supabaseClient) { cb([]); return () => { }; }
 
     async function fetchReviews() {
       try {
@@ -789,6 +793,7 @@ const SupabaseStore = {
   },
 
   async addReview(r) {
+    await ensureSupabaseSession();
     if (!SUPABASE_READY || !supabaseClient) throw new Error("Supabase is not connected.");
     const row = {
       booking_id: r.bookingId || '',
@@ -892,18 +897,18 @@ function seedLocalIfNeeded() {
 }
 
 const LocalStore = {
-  watchTutors(cb) { localListeners.tutors.push(cb); cb(localGet(LOCAL_KEYS.tutors)); return () => {}; },
+  watchTutors(cb) { localListeners.tutors.push(cb); cb(localGet(LOCAL_KEYS.tutors)); return () => { }; },
   watchCourses(cb) {
     localListeners.courses.push(cb);
     const list = localGet(LOCAL_KEYS.courses);
     cb(list.length ? list : DEFAULT_COURSES.map((name, i) => ({ id: 'c_' + i, name })));
-    return () => {};
+    return () => { };
   },
-  watchResources(cb) { localListeners.resources.push(cb); cb(localGet(LOCAL_KEYS.resources)); return () => {}; },
-  watchBookings(cb) { localListeners.bookings.push(cb); cb(localGet(LOCAL_KEYS.bookings)); return () => {}; },
-  watchNotifications(cb) { localListeners.notifications.push(cb); cb(localGet(LOCAL_KEYS.notifications)); return () => {}; },
-  watchReviews(cb) { localListeners.reviews.push(cb); cb(localGet(LOCAL_KEYS.reviews)); return () => {}; },
-  
+  watchResources(cb) { localListeners.resources.push(cb); cb(localGet(LOCAL_KEYS.resources)); return () => { }; },
+  watchBookings(cb) { localListeners.bookings.push(cb); cb(localGet(LOCAL_KEYS.bookings)); return () => { }; },
+  watchNotifications(cb) { localListeners.notifications.push(cb); cb(localGet(LOCAL_KEYS.notifications)); return () => { }; },
+  watchReviews(cb) { localListeners.reviews.push(cb); cb(localGet(LOCAL_KEYS.reviews)); return () => { }; },
+
   uploadStorageFile(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
