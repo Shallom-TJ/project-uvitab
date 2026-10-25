@@ -389,7 +389,8 @@ const SupabaseStore = {
     }
 
     const isAdmin = typeof isAdminUser === 'function' && isAdminUser();
-    const uploadStatus = isAdmin ? (r.status || 'Approved') : 'Pending';
+    const uploadStatus = isAdmin ? (r.status || 'Approved')
+      : (typeof AUTO_APPROVE_UPLOADS !== 'undefined' && AUTO_APPROVE_UPLOADS ? 'Approved' : 'Pending');
 
     const insertData = {
       title: r.title || fileName || 'Untitled Document',
@@ -1190,7 +1191,7 @@ function renderSetupBanner() {
   if (IS_BACKEND_READY) return;
   const banner = document.createElement('div');
   banner.className = 'setup-banner';
-  banner.innerHTML = 'Running in preview mode — uploads and bookings are saved locally. Connect your Supabase credentials in <code>js/supabase-config.js</code> to share them live with every student across all devices.';
+  banner.innerHTML = '⚠️ NOT CONNECTED TO SUPABASE — what you upload is saved only in this browser and nobody else can see it. Connect your Supabase credentials in <code>js/supabase-config.js</code> to share them live with every student across all devices.';
   document.body.prepend(banner);
 }
 

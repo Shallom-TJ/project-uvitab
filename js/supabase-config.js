@@ -11,6 +11,10 @@
 var SUPABASE_URL = 'https://urxdyoeblbnhoqwhuins.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_DEdVtf8fRPjbObN7y0dDTg_1bki6jpO';
 
+// true  = uploads are visible to everyone immediately (run supabase/fix-visibility.sql once)
+// false = uploads stay 'Pending' until an admin approves them
+var AUTO_APPROVE_UPLOADS = true;
+
 // Guard: Supabase SDK loaded AND real credentials pasted
 var SUPABASE_READY = typeof supabase !== 'undefined' &&
   typeof SUPABASE_ANON_KEY === 'string' &&
